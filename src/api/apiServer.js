@@ -1,4 +1,4 @@
-const PORT_SERVER = 4000;
+const PORT_SERVER = 5000;
 // const IP_SERVER = 'https://chamdiemv03.vercel.app';
 // const PORT_SERVER = 80;
 // const IP_SERVER = "http://localhost"

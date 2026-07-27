@@ -293,6 +293,19 @@ export default function AdminDarboard() {
                     </div>
                   </NavLink>
                 </li>
+                <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
+                  <NavLink
+                    to="/admin/ai-knowledge"
+                    style={({ isActive }) =>
+                      isActive ? activeStyle : undefined
+                    }
+                  >
+                    <div className="flex items-center space-x-2">
+                      <LocalPoliceIcon color="primary" />
+                      <span>Tài liệu kiến thức AI</span>
+                    </div>
+                  </NavLink>
+                </li>
               </>
             )}
 

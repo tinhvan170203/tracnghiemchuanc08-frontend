@@ -38,6 +38,7 @@ const ChangePassPage = lazy(() => import("./auth/ChangePass/ChangePassPage"));
 const QuanlyTaikhoan = lazy(() => import("./features/Auth/QuanlyTaikhoan"));
 const AdminDarboard = lazy(() => import("./components/Admin"));
 const QuanlyDonvi = lazy(() => import("./features/Quanlydonvi/QuanlyDonvi"));
+const AiKnowledge = lazy(() => import("./features/AiKnowledge/AiKnowledge"));
 
 function App() {
   
@@ -65,6 +66,7 @@ function App() {
             <Route path="thong-ke-dia-phuong" element={<ThongkeDiaphuong />} />
             <Route path="quan-ly-tai-khoan" element={<QuanlyTaikhoan />} />
             <Route path="domain-dia-phuong" element={<QuanlyDiaphuong />} />
+            <Route path="ai-knowledge" element={<AiKnowledge />} />
             <Route
               path="phan-quyen-quan-ly-mon-thi"
               element={<PhanquyenQuanlyDonvi />}
