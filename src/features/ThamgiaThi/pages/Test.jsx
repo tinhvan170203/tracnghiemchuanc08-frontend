@@ -76,10 +76,14 @@ const Test = () => {
   });
 
   const [questions, setQuestions] = useState([]);
-  const [secretKey, setSecretKey] = useState(null)
+  const [secretKey, setSecretKey] = useState(() => localStorage.getItem("exam_secret_key"));
 
   const [thongtinbaithi, setThongtincuocthi] = useState(() => {
-    return JSON.parse(localStorage.getItem("thongtinbaithi"));
+    try {
+      return JSON.parse(localStorage.getItem("thongtinbaithi"));
+    } catch {
+      return null;
+    }
   });
 
   const [open, setOpen] = useState(false);
@@ -92,32 +96,29 @@ const Test = () => {
   })
   const [stop, setStop] = useState(false);
   const [isLoading, setLoading] = useState(false);
-  // useEffect(() => {
-
-  // }, [])
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
-    if (!thisinh || !questions || !thongtinbaithi) {
+    if (!thisinh || !thongtinbaithi || !secretKey) {
       navigate("/");
+      return;
     }
 
     let checkedTest = async () => {
-      // hàm kiểm tra xem bài thi này đã hoàn thành trên thiết bị khác hay chưa
       try {
-        let res = await commonApi.checkedTest(thongtinbaithi._id);
-  
-        setSecretKey(res.data.secretKey)
-        // let questionList = JSON.parse(localStorage.getItem("question_list"));
-        let questionList = getDecryptedExam(res.data.secretKey);
-      
-        if (!questionList) return;
+        let res = await commonApi.checkedTest(thongtinbaithi._id, secretKey);
+        let questionList = getDecryptedExam(secretKey);
+
+        if (!questionList) {
+          navigate("/");
+          return;
+        }
         let arr = [];
         questionList.forEach(item => {
           let options_question = [];
           item.options_sort.forEach(i => options_question = [...options_question, { [i]: item.questionlist[i] }]);
           const optionsMap = options_question.map(item => {
             return Object.fromEntries(
-              // Lọc những cặp [key, value] mà value KHÁC rỗng
               Object.entries(item).filter(([key, value]) => value !== "")
             );
           }).filter(item => Object.keys(item).length > 0);;
@@ -136,7 +137,6 @@ const Test = () => {
 
   //handle change choice question
   const handleChangeChoice = (id_question, choice) => {
-    // console.log(id_question, choice)
     let newQuestions = questions.map(question => {
       if (question._id.toString() === id_question) {
         return { ...question, choice }
@@ -145,22 +145,23 @@ const Test = () => {
       }
     });
 
-    // let x = JSON.parse(localStorage.getItem('question_list'));
     let x = getDecryptedExam(secretKey);
+    if (!x) return;
     let question_change = x.find(e => e.questionlist._id === id_question);
 
     question_change.questionlist.choice = choice;
-    // localStorage.setItem('question_list', JSON.stringify(x));
     saveEncryptedExam(x, secretKey)
     setQuestions(newQuestions);
   };
 
 
-  //submit nộp bìa thi
+  //submit nộp bài thi
   const handleSubmitTest = async () => {
+    if (submitted || !secretKey) return;
     try {
+      setSubmitted(true);
       setLoading(true);
-      let res = await commonApi.submitTest(thongtinbaithi._id, questions);
+      let res = await commonApi.submitTest(thongtinbaithi._id, questions, secretKey);
       setResult({
         ...result, choicedTrue: res.data.choicedTrue,
         name: res.data.name,
@@ -173,8 +174,10 @@ const Test = () => {
       setStop(true);
       setOpenDialogSuccessTest(true);
     } catch (error) {
+      setSubmitted(false);
+      setLoading(false);
       console.log(error)
-      enqueueSnackbar(error.message, {
+      enqueueSnackbar(error.message || "Không thể nộp bài", {
         anchorOrigin: {
           vertical: "bottom",
           horizontal: "right",
@@ -184,18 +187,21 @@ const Test = () => {
     }
   }
 
-  const handleSubmitOut = () => {
+  const clearExamStorage = () => {
     localStorage.removeItem('thongtinthisinh')
     localStorage.removeItem('question_list')
     localStorage.removeItem('thongtinbaithi')
+    localStorage.removeItem('exam_secret_key')
+  };
+
+  const handleSubmitOut = () => {
+    clearExamStorage()
     setOpenDialogSuccessTest(false)
     navigate(-2)
   };
 
   const handleSubmitSuccess = () => {
-    localStorage.removeItem('thongtinthisinh')
-    localStorage.removeItem('question_list')
-    localStorage.removeItem('thongtinbaithi')
+    clearExamStorage()
     setOpenDialogSuccessTest(false)
     navigate(-1)
   };
@@ -276,6 +282,7 @@ const Test = () => {
           open={openDialogPreviewBaithi}
           onCloseDialogPreviewBaithi={handleCloseDialogPreviewBaithi}
           idBaithi={thongtinbaithi?._id}
+          secretKey={secretKey}
         />
 
         <ModalLoading open={isLoading} />

@@ -32,6 +32,8 @@ function msToHMS(ms) {
 const Clock = ({ thoigianketthuc, onHandleSubmitTest, stop, timeNow }) => {
   const [num, setNum] = useState(1000000000000000);
   const [show, setShow] = useState(false)
+  const intervalRef = useRef();
+  const submittedRef = useRef(false);
 
   useEffect(() => {
     if (timeNow) {
@@ -39,9 +41,7 @@ const Clock = ({ thoigianketthuc, onHandleSubmitTest, stop, timeNow }) => {
       setShow(true)
       setNum(timeBack)
     }
-  }, [timeNow])
-
-  let intervalRef = useRef();
+  }, [timeNow, thoigianketthuc])
 
   const decreaseNum = () => setNum((prev) => prev - 1000);
 
@@ -49,16 +49,19 @@ const Clock = ({ thoigianketthuc, onHandleSubmitTest, stop, timeNow }) => {
     intervalRef.current = setInterval(decreaseNum, 1000);
     return () => clearInterval(intervalRef.current);
   }, []);
-  //check hết thời gian mà chưa nộp bài
+
+  // Hết giờ: chỉ auto-submit đúng 1 lần
   useEffect(() => {
-    if (num <= 0) {
+    if (num <= 0 && show && !stop && !submittedRef.current) {
+      submittedRef.current = true;
       clearInterval(intervalRef.current);
-      onHandleSubmitTest()
+      onHandleSubmitTest();
     }
-  }, [num])
+  }, [num, show, stop, onHandleSubmitTest])
 
   useEffect(() => {
     if (stop) {
+      submittedRef.current = true;
       clearInterval(intervalRef.current);
     }
   }, [stop])

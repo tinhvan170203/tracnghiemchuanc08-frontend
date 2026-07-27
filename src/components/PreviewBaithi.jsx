@@ -26,20 +26,21 @@ const CancelButton = styled(IconButton)({
 export default function PreviewBaithi({
   open,
   onCloseDialogPreviewBaithi,
-  idBaithi
-  //   item
+  idBaithi,
+  secretKey,
 }) {
 
   const [questions, setQuestions] = useState([]);
   const [choicedTrue, setChoicedTrue] = useState(0);
-  //  const [questions, setQuestions] = useState([]);
 
   React.useEffect(() => {
-    const fetch = async (req, res) => {
+    const fetch = async () => {
       try {
-        let res = await commonApi.previewTest(idBaithi);
+        // Thí sinh: public + secretKey | Admin: JWT (không cần secretKey)
+        let res = secretKey
+          ? await commonApi.previewTest(idBaithi, secretKey)
+          : await commonApi.previewTestAdmin(idBaithi);
         setChoicedTrue(res.data.choicedTrue)
-        // console.log(res)
 
         let arr = [];
         res.data.questionList.forEach(item => {
@@ -47,12 +48,10 @@ export default function PreviewBaithi({
           item.options_sort.forEach(i => options_question = [...options_question, { [i]: item.questionlist[i] }]);
           const result = options_question.map(item => {
             return Object.fromEntries(
-              // Lọc những cặp [key, value] mà value KHÁC rỗng
               Object.entries(item).filter(([key, value]) => value !== "")
             );
           }).filter(item => Object.keys(item).length > 0);;
 
-          // console.log(result)
           arr.push({ question: item.questionlist.question, image: item.questionlist.image, answer: item.questionlist.answer, choice: item.choice, _id: item.questionlist._id, options: result })
         });
 
@@ -62,10 +61,10 @@ export default function PreviewBaithi({
       }
     };
 
-    if (open === true) {
+    if (open === true && idBaithi) {
       fetch()
     }
-  }, [idBaithi, open]);
+  }, [idBaithi, open, secretKey]);
 
 
   return (

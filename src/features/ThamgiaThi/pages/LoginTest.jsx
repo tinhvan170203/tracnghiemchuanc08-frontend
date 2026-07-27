@@ -114,6 +114,7 @@ function LoginTest() {
       localStorage.setItem("thongtinthisinh", JSON.stringify(res.data.item));
       saveEncryptedExam(res.data.questionsSendClient, res.data.secretKey);
       localStorage.setItem("thongtinbaithi", JSON.stringify(res.data.cuocthi));
+      localStorage.setItem("exam_secret_key", res.data.secretKey);
       navigate("/vao-thi");
       enqueueSnackbar("Chúc bạn đạt kết quả tốt nhất!", {
         anchorOrigin: { vertical: "bottom", horizontal: "right" },

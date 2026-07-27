@@ -14,6 +14,10 @@ const userApi = {
         const url = `c08/auth/logout`;
         return axiosConfig.get(url)
     },
+    getMe(){
+        const url = `c08/auth/me`;
+        return axiosConfig.get(url)
+    },
     getUsers(page){
         const url = `c08/auth/users/fetch`;
         return axiosConfig.get(url, {params: {page: page}})

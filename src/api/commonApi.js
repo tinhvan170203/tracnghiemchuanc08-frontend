@@ -44,17 +44,31 @@ const commonApi = {
         const url = "/c08/public/loginTest";
         return axiosCommon.post(url, data)
     },
-    checkedTest(id) {
+    checkedTest(id, secretKey) {
         const url = `/c08/public/checkedTest/${id}`;
-        return axiosCommon.get(url)
+        return axiosCommon.get(url, {
+            params: { secretKey },
+            headers: { "x-exam-key": secretKey },
+        })
     },
-    previewTest(id) {
+    previewTest(id, secretKey) {
         const url = `/c08/public/preview/${id}`;
-        return axiosCommon.get(url)
+        return axiosCommon.get(url, {
+            params: { secretKey },
+            headers: { "x-exam-key": secretKey },
+        })
     },
-    submitTest(id, data) {
+    previewTestAdmin(id) {
+        const url = `/c08/mon-thi/bai-thi/${id}/preview`;
+        return axiosConfig.get(url)
+    },
+    submitTest(id, answers, secretKey) {
         const url = `/c08/public/${id}/submitTest`;
-        return axiosCommon.post(url, data)
+        return axiosCommon.post(
+            url,
+            { secretKey, answers },
+            { headers: { "x-exam-key": secretKey } }
+        )
     },
     checkCuocthi(params) {
         const url = `/c08/public/checkedCuocthi`;

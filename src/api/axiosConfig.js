@@ -14,8 +14,8 @@ const axiosConfig = axios.create({
 // ==============================
 const refreshToken = async () => {
   try {
-    // Không cần truyền thêm { withCredentials: true } ở đây nữa vì đã cấu hình ở axios.create phía trên
-    const response = await axiosConfig.post("/c08/auth/requestRefreshToken", {});
+    // Backend: GET /c08/auth/requestRefreshToken (cookie refreshToken)
+    const response = await axiosConfig.get("/c08/auth/requestRefreshToken");
     return response.data;
   } catch (error) {
     throw error;
@@ -69,45 +69,38 @@ axiosConfig.interceptors.response.use(
   async function (error) {
     console.log('Error interceptor:', error);
     const originalRequest = error.config;
+    const status = error.response?.status;
+    const message = error.response?.data?.message || "";
 
-    // Nếu chính requestRefreshToken cũng bị lỗi 401/403 -> Chuyển hướng sang Login luôn
-    if (originalRequest.url.includes("requestRefreshToken")) {
-      localStorage.clear(); // Xóa thông tin user cũ (nếu có)
+    // Nếu chính requestRefreshToken cũng bị lỗi -> Login
+    if (originalRequest?.url?.includes("requestRefreshToken")) {
+      localStorage.clear();
       window.location.href = "/login";
       return Promise.reject(error);
     }
 
-    // Access token hết hạn (Backend trả về lỗi 401)
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      
-      // Nếu đang trong quá trình refresh token từ một request lỗi trước đó
+    const isUnauthenticated = status === 401;
+    const isTokenExpired =
+      status === 403 && String(message).toLowerCase().includes("hết hạn");
+
+    // Access token thiếu/hết hạn -> thử refresh cookie
+    if ((isUnauthenticated || isTokenExpired) && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
-          .then(() => {
-            return axiosConfig(originalRequest); // Gọi lại request cũ sau khi refresh thành công
-          })
-          .catch((err) => {
-            return Promise.reject(err);
-          });
+          .then(() => axiosConfig(originalRequest))
+          .catch((err) => Promise.reject(err));
       }
 
       originalRequest._retry = true;
       isRefreshing = true;
 
       try {
-        // Gọi hàm refresh token
         await refreshToken();
-        
-        // Chạy tiếp các request đang đợi trong hàng đợi (queue)
         processQueue();
-
-        // Thực hiện lại request ban đầu bị lỗi 401
         return axiosConfig(originalRequest);
       } catch (err) {
-        // Nếu refresh thất bại (ví dụ: Refresh Token hết hạn)
-        // console.log(first)
         processQueue(err);
         localStorage.clear();
         window.location.href = "/login";
@@ -117,8 +110,8 @@ axiosConfig.interceptors.response.use(
       }
     }
 
-    // Xử lý lỗi 403 (Cấm truy cập - Không đủ quyền) độc lập với lỗi 401 tránh bị lặp vô hạn
-    if (error.response?.status === 403) {
+    // 403 quyền thật sự (không phải hết hạn token)
+    if (status === 403 && !isTokenExpired) {
       alert("Bạn không có quyền truy cập vào tài nguyên này!");
     }
 
