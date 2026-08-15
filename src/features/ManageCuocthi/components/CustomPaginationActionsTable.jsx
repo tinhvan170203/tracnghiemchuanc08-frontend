@@ -92,7 +92,9 @@ export default function CustomPaginationActionsTable({
   list,
   onClickOpenDialogEdit,
   onClickOpenDialogDelete,
-  onHandleChangeStatusCuocthi
+  onHandleChangeStatusCuocthi,
+  onExportExcel,
+  exportingId,
 }) {
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -172,7 +174,7 @@ export default function CustomPaginationActionsTable({
               >
                 Ngày tổ chức thi
               </TableCell>
-              <TableCell
+              {/* <TableCell
                 align="left"
                 style={{
                   fontSize: "14px",
@@ -182,7 +184,7 @@ export default function CustomPaginationActionsTable({
                 }}
               >
                 Số điểm của cuộc đánh giá
-              </TableCell>
+              </TableCell> */}
               <TableCell
                 align="left"
                 style={{
@@ -219,6 +221,8 @@ export default function CustomPaginationActionsTable({
                 onClickOpenDialogEdit={onClickOpenDialogEdit}
                 onClickOpenDialogDelete={onClickOpenDialogDelete}
                 onHandleChangeStatusCuocthi={onHandleChangeStatusCuocthi}
+                onExportExcel={onExportExcel}
+                exportingId={exportingId}
               />
             ))}
             {emptyRows > 0 && (

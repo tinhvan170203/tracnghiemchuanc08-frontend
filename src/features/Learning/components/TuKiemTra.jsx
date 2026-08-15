@@ -37,7 +37,7 @@ export default function TuKiemTra() {
       saveEncryptedExam(res.data.questionsSendClient, res.data.secretKey);
       localStorage.setItem("thongtinbaithi", JSON.stringify(res.data.cuocthi));
       localStorage.setItem("exam_secret_key", res.data.secretKey);
-      navigate("/vao-thi");
+      navigate("/vao-thi?ontap=true");
       enqueueSnackbar("Chúc bạn đạt kết quả tốt nhất!", {
         anchorOrigin: { vertical: "bottom", horizontal: "right" },
         variant: "success",
@@ -53,11 +53,31 @@ export default function TuKiemTra() {
     const raw = localStorage.getItem("thongtin_doituong_tuhoc");
     const thisinh = raw ? JSON.parse(raw) : null;
 
-    if (thisinh && thisinh.name && thisinh.birthday) {
-      // đã có thông tin -> tự động gọi luôn, không cần hỏi lại
-      handleSubmitForm({ name: thisinh.name, birthday: thisinh.birthday, phone: "***", donvi:"Tự kiểm tra", hokhau:"" });
+    const hasFullInfo =
+      thisinh &&
+      thisinh.name &&
+      /^\d{4}$/.test(String(thisinh.birthday || "")) &&
+      thisinh.gioitinh &&
+      thisinh.loaixe &&
+      thisinh.hang_gplx &&
+      thisinh.nghenghiep &&
+      thisinh.donvi &&
+      thisinh.phone;
+
+    if (hasFullInfo) {
+      handleSubmitForm({
+        name: thisinh.name,
+        birthday: thisinh.birthday,
+        phone: thisinh.phone,
+        donvi: thisinh.donvi,
+        hokhau: thisinh.hokhau || "",
+        gioitinh: thisinh.gioitinh,
+        loaixe: thisinh.loaixe,
+        hang_gplx: thisinh.hang_gplx,
+        nghenghiep: thisinh.nghenghiep,
+      });
     } else {
-      // chưa có -> dừng loading, hiện form cho user nhập
+      // chưa có / thiếu field mới -> hiện form
       setLoading(false);
     }
   }, [id_cuocthi]);

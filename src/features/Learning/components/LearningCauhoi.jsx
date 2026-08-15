@@ -20,6 +20,7 @@ import {
 } from './utils';
 import learningApi from '../../../api/learningApi';
 import { API_SERVER } from '../../../api/apiServer';
+import { HEADER_1, HEADER_2 } from '../../../../constant/constant';
 
 export default function LearningCauhoi() {
     const { chuyendeId } = useParams();
@@ -144,10 +145,10 @@ export default function LearningCauhoi() {
                             <img src="/logoc08.png" className="md:w-[64px] w-8" />
                         </div>
                         <h3 className="text-center text-[11px] md:text-lg md:text-white uppercase text-[#ffee00] drop-shadow [text-shadow:_1px_1px_4px_black] font-bold">
-                            Bộ Công an
+                            {HEADER_1}
                         </h3>
                         <h3 className="text-center text-[11px] md:text-lg md:text-white uppercase text-[#ffee00] drop-shadow [text-shadow:_1px_1px_4px_black] font-bold">
-                            Cục cảnh sát giao thông
+                           {HEADER_2}
                         </h3>
                     </div>
                 </div>
@@ -209,10 +210,10 @@ export default function LearningCauhoi() {
                     </div>
 
                     <h3 className="text-center text-[11px] md:text-lg md:text-white uppercase text-[#ffee00] drop-shadow [text-shadow:_1px_1px_4px_black] font-bold">
-                        Bộ Công an
+                        {HEADER_1}
                     </h3>
                     <h3 className="text-center text-[11px] md:text-lg md:text-white uppercase text-[#ffee00] drop-shadow [text-shadow:_1px_1px_4px_black] font-bold">
-                        Cục cảnh sát giao thông
+                       {HEADER_2}
                     </h3>
                 </div>
             </div>
@@ -253,7 +254,7 @@ export default function LearningCauhoi() {
                         {current?.image && (
                             <div className="my-4 overflow-hidden rounded-2xl border border-orange-100 bg-orange-50/30 p-2">
                                 <img
-                                    src={`${API_SERVER}c08/uploads/${current.image}`}
+                                    src={`${API_SERVER}api/uploads/${current.image}`}
                                     alt="Hình ảnh câu hỏi"
                                     className="max-h-80 w-full object-contain rounded-xl mx-auto"
                                 />
@@ -261,16 +262,32 @@ export default function LearningCauhoi() {
                         )}
                     </div>
 
+                    {/* Các nội dung câu trả lời, câu nào là đáp án thì xanh lè */}
+                 {["a", "b", "c", "d", "e"]
+  .filter((i) => current[`option_${i}`] !== "")
+  .map((character, index) => (
+    <p
+      key={character}
+      className={
+        `option_${character}` === current.answer
+          ? "text-[13px] font-semibold text-emerald-800 pl-6"
+          : "text-[13px] font-semibold pl-6"
+      }
+    >
+      {String.fromCharCode(65 + index)}. {current[`option_${character}`]}
+    </p>
+  ))}
+
                     {/* Khung hiển thị đáp án */}
 
-                    <div className="mt-6 rounded-2xl bg-emerald-50 border border-emerald-200 p-4 text-emerald-900 animate-fadeIn">
+                    {/* <div className="mt-6 rounded-2xl bg-emerald-50 border border-emerald-200 p-4 text-emerald-900 animate-fadeIn">
                         <div className="flex items-center gap-2 mb-1 text-emerald-700  text-xs uppercase tracking-wider">
                             <CheckCircle2 className="h-4 w-4" /> Nội dung câu trả lời:
                         </div>
                         <p className="text-[14px] font-semibold text-emerald-800 pl-6">
                             {current?.answerText}
                         </p>
-                    </div>
+                    </div> */}
 
 
                 </div>

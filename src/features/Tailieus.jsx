@@ -70,7 +70,7 @@ const Tailieus = () => {
                     <div key={i._id} className='flex justify-between my-2'>
                         <div className='flex items-center space-x-1' style={{color: "orange"}}>
                             <span className='font-semibold flex items-center'><FileText size={18}/> {i.thutu}. </span>
-                            <a className=' text-orange-600 hover:underline text-sm md:text-[16px]' target='_blank' href={`${API_SERVER}c08/uploads/${i.file}`}>{i.text} </a>
+                            <a className=' text-orange-600 hover:underline text-sm md:text-[16px]' target='_blank' href={`${API_SERVER}api/uploads/${i.file}`}>{i.text} </a>
                         </div>
                     </div>
                 ))}

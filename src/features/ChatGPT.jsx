@@ -23,9 +23,9 @@ const API_URL = `${API_SERVER}api/chat-gpt`;
 const STORAGE_KEY = "traffic_chat_history_gpt";
 
 const sourceLabel = {
-  file: { label: "Từ tài liệu", color: "success" },
-  web: { label: "Từ web", color: "warning" },
-  mixed: { label: "Tài liệu + web", color: "info" },
+  // file: { label: "Từ tài liệu", color: "success" },
+  // web: { label: "Từ web", color: "warning" },
+  // mixed: { label: "Tài liệu + web", color: "info" },
 };
 
 function ChatGPT() {

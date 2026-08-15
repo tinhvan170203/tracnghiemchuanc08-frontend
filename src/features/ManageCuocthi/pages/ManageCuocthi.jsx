@@ -52,6 +52,10 @@ const ManageCuocthi = () => {
   const [id_monthi, setIdMonthi] = useState(null);
   const [chuyendeList, setChuyendeList] = useState([]);
   const [text, setText] = useState('');
+  const [tungay, setTungay] = useState("");
+  const [denngay, setDenngay] = useState("");
+  const [xeploai, setXeploai] = useState("");
+  const [exportingId, setExportingId] = useState(null);
   const [openDialogEdit, setOpenDialogEdit] = useState({
     status: false,
     item: null,
@@ -198,6 +202,46 @@ const ManageCuocthi = () => {
 
   const handleOpenDialogAddCauhoi = () => {
     setOpenDialogAddCauhoi(true);
+  };
+
+  const handleExportExcel = async (row) => {
+    if (!row?._id) return;
+    setExportingId(row._id);
+    try {
+      const res = await monthiApi.exportKetquaExcel(row._id, {
+        tungay,
+        denngay,
+        xeploai,
+      });
+      const contentType = res.headers?.["content-type"] || "";
+      if (contentType.includes("application/json")) {
+        const textRes = await res.data.text();
+        const parsed = JSON.parse(textRes);
+        throw new Error(parsed.message || "Không xuất được file Excel");
+      }
+      const blob = new Blob([res.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const safe =
+        String(row.tencuocthi || "export")
+          .replace(/[^\w\-]+/g, "_")
+          .slice(0, 60) || "export";
+      a.download = `KetQuaThi_${safe}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      enqueueSnackbar(error?.message || "Không xuất được file Excel", {
+        anchorOrigin: { vertical: "bottom", horizontal: "right" },
+        variant: "error",
+      });
+    } finally {
+      setExportingId(null);
+    }
   };
 
   const handleChangeMonthi = (event) => {
@@ -485,8 +529,27 @@ const ManageCuocthi = () => {
         {openModalLoading && <ModalLoading open={openModalLoading} />}
       </div>
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-col md:flex-row md:items-end gap-3 flex-wrap">
         <input type="text" onChange={(e) => setText(e.target.value)} placeholder="Tìm kiếm cuộc thi" className="outline-none border rounded-sm border-slate-400 py-2 px-4" />
+        <div className="flex items-center justify-between space-x-2">
+          <label className="text-[12px] font-semibold whitespace-nowrap">Từ ngày</label>
+          <input type="date" value={tungay} onChange={(e) => setTungay(e.target.value)} className="outline-none border text-[12px] p-1 bg-gray-100" />
+        </div>
+        <div className="flex items-center justify-between space-x-2">
+          <label className="text-[12px] font-semibold whitespace-nowrap">Đến ngày</label>
+          <input type="date" value={denngay} onChange={(e) => setDenngay(e.target.value)} className="outline-none border text-[12px] p-1 bg-gray-100" />
+        </div>
+        <div className="flex items-center justify-between space-x-2">
+          <label className="text-[12px] font-semibold whitespace-nowrap">Xếp loại</label>
+          <select value={xeploai} onChange={(e) => setXeploai(e.target.value)} className="outline-none border text-[12px] p-1 bg-gray-100">
+            <option value="">Tất cả</option>
+            <option value="Xuất sắc">Xuất sắc</option>
+            <option value="Giỏi">Giỏi</option>
+            <option value="Khá">Khá</option>
+            <option value="Trung bình">Trung bình</option>
+            <option value="Không đạt">Không đạt</option>
+          </select>
+        </div>
       </div>
 
       <CustomPaginationActionsTable
@@ -495,6 +558,8 @@ const ManageCuocthi = () => {
         onClickOpenDialogDelete={handleOpenDialogDelete}
         onClickOpenDialogEdit={handleOpenDialogEdit}
         onHandleChangeStatusCuocthi={handleChangeStatusCuocthi}
+        onExportExcel={handleExportExcel}
+        exportingId={exportingId}
       />
 
       <Suspense fallback={<ModalLoading open={true} />}>

@@ -29,7 +29,8 @@ export const RadioField = (props) => {
               <FormControlLabel
                 value={option.value}
                 key={option.value}
-                control={<Radio />}
+                disabled={disabled}
+                control={<Radio disabled={disabled} />}
                 label={option.label}
               />
             ))}

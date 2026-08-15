@@ -37,7 +37,7 @@ const CauhoiPreview = ({ question, index }) => {
                 <div>
         {question.image && question.image !== "" && (
           <div className="flex justify-center items-center my-4">
-            <img src={`${API_SERVER}c08/uploads/${question.image}`} alt="image" className="w-full md:w-[400px]"/>
+            <img src={`${API_SERVER}api/uploads/${question.image}`} alt="image" className="w-full md:w-[400px]"/>
             </div>
         )}
       </div>

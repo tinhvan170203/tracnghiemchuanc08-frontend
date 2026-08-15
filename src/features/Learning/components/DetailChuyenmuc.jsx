@@ -11,6 +11,7 @@ import {
   isDoneAll,
   resetProgress,
 } from './utils';
+import { HEADER_1, HEADER_2 } from '../../../../constant/constant';
 const getProgressPercent = (chuyendeId, soCauHoi) => {
   if (!soCauHoi) return 0;
   const learnedIds = getLearnedIds(chuyendeId);
@@ -41,20 +42,20 @@ const DetailChuyenmuc = () => {
 
   return (
     <div>
-      <div className="shadow-md shadow-slate-400 mb-4 md:h-auto bg-center py-2 bg-cover  bg-[url('/nentrongdong.png')] z-10 flex justify-center">
-        <div className="">
-          <div className="flex items-center justify-center" >
-            <img src="/cong-an-hieu.png" className="md:w-24 w-12" />
-            <img src="/logoc08.png" className="md:w-[64px] w-8" />
-          </div>
-          <h3 className="text-center text-[11px] md:text-lg md:text-white uppercase text-[#ffee00] drop-shadow [text-shadow:_1px_1px_4px_black] font-bold">
-            Bộ Công an
-          </h3>
-          <h3 className="text-center text-[11px] md:text-lg md:text-white uppercase text-[#ffee00] drop-shadow [text-shadow:_1px_1px_4px_black] font-bold">
-            Cục cảnh sát giao thông
-          </h3>
-        </div>
-      </div>
+     <div className="shadow-md shadow-slate-400 mb-4 md:h-auto bg-center py-2 bg-cover  bg-[url('/nentrongdong.png')] z-10 flex justify-center">
+                    <div className="">
+                        <div className="flex items-center justify-center" >
+                            <img src="/cong-an-hieu.png" className="md:w-24 w-12" />
+                            <img src="/logoc08.png" className="md:w-[64px] w-8" />
+                        </div>
+                        <h3 className="text-center text-[11px] md:text-lg md:text-white uppercase text-[#ffee00] drop-shadow [text-shadow:_1px_1px_4px_black] font-bold">
+                            {HEADER_1}
+                        </h3>
+                        <h3 className="text-center text-[11px] md:text-lg md:text-white uppercase text-[#ffee00] drop-shadow [text-shadow:_1px_1px_4px_black] font-bold">
+                           {HEADER_2}
+                        </h3>
+                    </div>
+                </div>
 
       <p className='py-4 px-2 flex items-center space-x-1 font-semibold text-[14px]'>
         <img src='/logoc08.png' className='w-8' />

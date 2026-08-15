@@ -11,6 +11,7 @@ import MenuItem from "@mui/material/MenuItem";
 import MenuItemFunc from "./MenuItemFunc";
 import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
 
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import { useSelector } from "react-redux";
 
 
@@ -18,7 +19,9 @@ const BodyTable = ({
   row,
   onClickOpenDialogEdit,
   onClickOpenDialogDelete,
-  onHandleChangeStatusCuocthi
+  onHandleChangeStatusCuocthi,
+  onExportExcel,
+  exportingId,
 }) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
@@ -65,12 +68,12 @@ const BodyTable = ({
       >
         {dayjs(row.ngaytochucthi).format("DD/MM/YYYY")}
       </TableCell>
-      <TableCell
+      {/* <TableCell
         className="border-r border-slate-300"
         align="left"
       >
         {row.password}
-      </TableCell>
+      </TableCell> */}
       <TableCell
         className="border-r border-slate-300"
         align="left"
@@ -103,6 +106,20 @@ const BodyTable = ({
             onClick={() => onClickOpenDialogDelete(row._id)}
           >
             <DeleteOutlineIcon style={{ fontSize: "20px" }} />
+          </Button>
+        )}
+
+        {roles && roles.includes("xem cuộc thi") && (
+          <Button
+            variant="contained"
+            color="warning"
+            size="small"
+            style={{ marginLeft: "4px" }}
+            disabled={exportingId === row._id}
+            onClick={() => onExportExcel && onExportExcel(row)}
+          >
+            <FileDownloadIcon style={{ fontSize: "20px" }} />
+            {exportingId === row._id ? "Đang tải..." : ""}
           </Button>
         )}
 

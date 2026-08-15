@@ -13,7 +13,7 @@ const Giaychungnhan = forwardRef(({ result }, ref) => {
       }
 
       const response = await fetch(
-        `${API_SERVER}c08/certificate`,
+        `${API_SERVER}api/certificate`,
         {
           method: "POST",
           headers: {

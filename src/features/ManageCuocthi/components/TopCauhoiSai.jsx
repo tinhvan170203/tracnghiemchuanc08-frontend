@@ -80,8 +80,8 @@ function TheCauHoi({ item, thuHang }) {
         </h3>
 
         {item.image !== "" && (
-          <div className="mx-2">
-            <img src={`${API_SERVER}c08/uploads/${item.image}`} className="w-full h-auto" />
+          <div className="mx-2 flex justify-center items-center">
+            <img src={`${API_SERVER}api/uploads/${item.image}`} className="w-full my-1 md:w-[300px] h-auto" />
           </div>
         )}
         <div>

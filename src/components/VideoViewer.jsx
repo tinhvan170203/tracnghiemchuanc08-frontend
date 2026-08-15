@@ -7,7 +7,7 @@ function VideoViewer({ video }) {
 
   useEffect(()=>{
     if(video){
-      let checkLink = video.is_source_link_orther ? video.link_orther : `${API_SERVER}public/${video.link}`
+      let checkLink = video.is_source_link_orther ? video.link_orther : `${API_SERVER}api/public/${video.link}`
       setUrl(checkLink)
     }
   },[video]);

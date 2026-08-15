@@ -7,6 +7,7 @@ import LoginIcon from "@mui/icons-material/Login";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSnackbar } from "notistack";
 import { InputField } from "../../../components/form-control/InputField";
+import { SelectFieldNoneAll } from "../../../components/form-control/SelectFieldNoneAll";
 
 import commonApi from "../../../api/commonApi";
 import { FileText } from "lucide-react";
@@ -23,20 +24,19 @@ const saveEncryptedExam = (questionList, secretKey) => {
   }
 };
 
-// Cấu trúc Yup kiểm tra chặt chẽ định dạng dd/mm/yyyy
 const schema = yup
   .object({
     name: yup.string().required("Vui lòng nhập họ tên"),
     birthday: yup
       .string()
-      .required("Vui lòng nhập ngày/tháng/năm sinh")
-      .matches(
-        /^([0-2][0-9]|3[0-1])\/(0[1-9]|1[0-2])\/([0-9]{4})$/,
-        "Ngày sinh chưa đúng định dạng dd/mm/yyyy (Ví dụ: 19/05/2000)"
-      ),
-    phone: yup.string().required("Vui lòng nhập trường đơn vị, lớp..."),
+      .required("Vui lòng nhập năm sinh")
+      .matches(/^\d{4}$/, "Năm sinh phải gồm đúng 4 chữ số"),
+    phone: yup.string().required("Vui lòng nhập địa chỉ..."),
     donvi: yup.string().required("Vui lòng nhập số điện thoại liên hệ"),
-    hokhau: yup.string().required("Vui lòng nhập hộ khẩu thường trú"),
+    gioitinh: yup.string().required("Vui lòng chọn giới tính"),
+    loaixe: yup.string().required("Vui lòng chọn loại xe điều khiển"),
+    hang_gplx: yup.string().required("Vui lòng nhập hạng GPLX"),
+    nghenghiep: yup.string().required("Vui lòng nhập nghề nghiệp"),
   })
   .required();
 
@@ -47,7 +47,6 @@ function LoginTest() {
   const [test, setTest] = useState(null);
   const [name, setName] = useState('');
   const [donvi, setDonvi] = useState('');
-  const [hokhau, setHokhau] = useState('');
 
   const form = useForm({
     resolver: yupResolver(schema),
@@ -56,7 +55,10 @@ function LoginTest() {
       birthday: '',
       phone: '',
       donvi: '',
-      hokhau: '',
+      gioitinh: 'Nam',
+      loaixe: 'Mô tô',
+      hang_gplx: '',
+      nghenghiep: '',
     }
   });
   
@@ -67,12 +69,12 @@ function LoginTest() {
     const checkedTest = async () => {
       try {
         let res = await commonApi.checkCuocthi({ id });
-        let checkName = ['698298f9f526e9e47993c8a7', '698298eff526e9e47993c8a1'].includes(res.data.monthi) ? "Lớp" : "Đơn vị (Lớp...)"
-        let checkDonvi= ['698298f9f526e9e47993c8a7', '698298eff526e9e47993c8a1'].includes(res.data.monthi) ? "SĐT" : "SĐT"
-        let checkHokhau = ['698298f9f526e9e47993c8a7', '698298eff526e9e47993c8a1'].includes(res.data.monthi) ? "Trường" : "Hộ khẩu thường trú (Trường...)"
-        setName(checkName)
-        setDonvi(checkDonvi)
-        setHokhau(checkHokhau)
+        // let checkName = ['698298f9f526e9e47993c8a7', '698298eff526e9e47993c8a1'].includes(res.data.monthi) ? "Lớp" : "Đơn vị (Lớp...)"
+        // let checkDonvi= ['698298f9f526e9e47993c8a7', '698298eff526e9e47993c8a1'].includes(res.data.monthi) ? "SĐT" : "SĐT"
+        // let checkHokhau = ['698298f9f526e9e47993c8a7', '698298eff526e9e47993c8a1'].includes(res.data.monthi) ? "Trường" : "Hộ khẩu thường trú (Trường...)"
+        // setName(checkName)
+        // setDonvi(checkDonvi)
+        // setHokhau(checkHokhau)
         setTest(res.data);
         setIsDisable(false)
       } catch (error) {
@@ -89,22 +91,6 @@ function LoginTest() {
 
     checkedTest();
   }, [id, navigate]);
-
-  // Hàm format chạy trực tiếp khi gõ, không dùng thông qua useEffect nữa
-  const handleBirthdayChange = (e) => {
-    let value = e.target.value.replace(/\D/g, ""); // Chỉ lấy số
-    if (value.length > 8) value = value.slice(0, 8); // Giới hạn tối đa 8 số lý tưởng
-
-    // Tự động chèn dấu gạch chéo dựa trên độ dài chuỗi số
-    if (value.length >= 5) {
-      value = `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4)}`;
-    } else if (value.length >= 3) {
-      value = `${value.slice(0, 2)}/${value.slice(2)}`;
-    }
-
-    // Cập nhật giá trị vào React Hook Form một cách an toàn
-    form.setValue("birthday", value, { shouldValidate: true });
-  };
 
   const handleSubmitForm = async (values) => {
     let data = { ...values, id_cuocthi: test._id };
@@ -156,39 +142,84 @@ function LoginTest() {
             form={form}
             disabled={isDisable}
           />
-          
-          {/* Ô nhập ngày sinh hoạt động mượt mà không bị giật/nhảy con trỏ chuột */}
-          <InputField
-            name="birthday"
-            label="Ngày sinh"
-            placeholder="Ví dụ: 19/05/2000"
-            inputMode="numeric"
-            form={form}
-            disabled={test === null}
-            onChange={handleBirthdayChange} 
-          />
-        <p className="text-[12px] text-gray-500">Vui lòng nhập ngày sinh theo đúng định dạng dd/mm/yyyy (Ví dụ: 02/12/2026)</p>
+          <div className="flex gap-2 items-start">
+            <div className="flex-1 min-w-0">
+              <InputField
+                name="birthday"
+                label="Năm sinh"
+                form={form}
+                type="text"
+                inputMode="numeric"
+                maxLength={4}
+                digitsOnly
+                disabled={isDisable}
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <SelectFieldNoneAll
+                name="gioitinh"
+                label="Giới tính"
+                form={form}
+                disabled={isDisable}
+                focused
+                options={[
+                  { value: "Nam", label: "Nam" },
+                  { value: "Nữ", label: "Nữ" },
+                ]}
+              />
+            </div>
+          </div>
 
-          <InputField
-            name="donvi"
-            label={donvi}
-            form={form}
-            disabled={isDisable}
-            type="number"
-          />
+          <div className="flex gap-2 items-start">
+            <div className="flex-1 min-w-0">
+              <SelectFieldNoneAll
+                name="loaixe"
+                label="Loại xe điều khiển"
+                form={form}
+                disabled={isDisable}
+                focused
+                options={[
+                  { value: "Ô tô", label: "Ô tô" },
+                  { value: "Mô tô", label: "Mô tô" },
+                  { value: "Cả hai", label: "Cả hai" },
+                ]}
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <InputField
+                name="hang_gplx"
+                label="Hạng GPLX"
+                form={form}
+                disabled={isDisable}
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-2 items-start">
+            <div className="flex-1 min-w-0">
+              <InputField
+                name="nghenghiep"
+                label="Nghề nghiệp"
+                form={form}
+                disabled={isDisable}
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <InputField
+                name="donvi"
+                label="SĐT"
+                form={form}
+                disabled={isDisable}
+                type="number"
+              />
+            </div>
+          </div>
           <InputField
             name="phone"
-            label={name}
+            label="Địa chỉ"
             form={form}
             disabled={isDisable}
           />
-          <InputField
-            name="hokhau"
-            label={hokhau}
-            form={form}
-            disabled={isDisable}
-          />
-
           {error && (
             <p className="md:text-md text-sm text-center m-2 text-red-600 font-semibold">{error}</p>
           )}
@@ -215,11 +246,16 @@ function LoginTest() {
           <FileText size={20} style={{ color: "orangered" }} />
           <a href="/cam-nang-an-toan-giao-thong" className="text-[14px] hover:underline" style={{ color: "orangered" }}>Cẩm nang an toàn giao thông</a>
         </div>
-        <p className="text-center text-slate-800 font-semibold text-[13px] md:text-md">Bản quyền thuộc Công an tỉnh Hưng Yên</p>
-        <p className="text-center text-slate-800 text-[12px] md:text-md">Ứng dụng công nghệ thông tin trong công tác tuyên truyền, phổ biến kiến thức pháp luật về trật tự an toàn giao thông</p>
+        <div className="flex justify-center">
+          <a href="/video-tuyen-truyen" className="text-[14px] hover:underline" style={{ color: "orangered" }}>Video tuyên truyền an toàn giao thông</a>
+        </div>
+        <div className="flex justify-center">
+          <a href="/hoc-tap" className="text-[14px] hover:underline" style={{ color: "orangered" }}>Tìm hiểu kiến thức về an toàn giao thông</a>
+        </div>
+        <p className="text-center text-gray-500 font-semibold uppercase text-[14px]">Cục Cảnh sát giao thông và Công an tỉnh Hưng Yên phối hợp thực hiện</p>
         <a href="/hoi-dap-voi-tro-ly-ao" className="absolute right-0 top-0 hover:cursor-pointer" >
           <img src='/AIgiaothong.png' className='w-20 md:w-[120px]' alt="" />
-          <span className="text-[8px] absolute top-[-32px] left-[-24px] rounded-tl-2xl rounded-br-2xl bg-white py-1 px-1">Hỏi đáp với trợ lý ảo Cục CSGT - Bộ Công an</span>
+          <span className="text-[8px] absolute top-[-32px] left-[-24px] rounded-tl-2xl rounded-br-2xl bg-white py-1 px-1">Hỏi đáp với trợ lý ảo giao thông</span>
         </a>
       </div>
     </div>

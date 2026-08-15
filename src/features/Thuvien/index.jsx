@@ -318,7 +318,7 @@ const ThuvienLuat = () => {
                                     <PictureAsPdfOutlinedIcon color="error" fontSize="small" />
                                     <Typography
                                         component="a"
-                                        href={`${API_SERVER}c08/uploads/${i.file}`}
+                                        href={`${API_SERVER}api/uploads/${i.file}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         sx={{

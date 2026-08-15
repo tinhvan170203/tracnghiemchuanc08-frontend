@@ -214,7 +214,7 @@ export default function DialogAddCauhoi({
                   style={{ margin: "4px auto" }}
                 >
                   <AddIcon />
-                  <span>Thêm mới câu hỏi</span>
+                  <span>Thêm mới</span>
                 </Button>
               </DialogActions>
             </form>

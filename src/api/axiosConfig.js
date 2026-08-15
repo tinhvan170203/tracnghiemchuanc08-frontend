@@ -14,8 +14,8 @@ const axiosConfig = axios.create({
 // ==============================
 const refreshToken = async () => {
   try {
-    // Backend: GET /c08/auth/requestRefreshToken (cookie refreshToken)
-    const response = await axiosConfig.get("/c08/auth/requestRefreshToken");
+    // Backend: GET /api/auth/requestRefreshToken (cookie refreshToken)
+    const response = await axiosConfig.get("/api/auth/requestRefreshToken");
     return response.data;
   } catch (error) {
     throw error;

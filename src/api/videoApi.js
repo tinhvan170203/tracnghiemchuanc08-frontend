@@ -3,15 +3,15 @@ import axiosMulter from "./axiosMulter";
 
 const videoApi = {
     getVideos(params){
-        const url = `/c08/video/fetch`;
+        const url = `/api/video/fetch`;
         return axiosConfig.get(url, {params})
     },
     incView(params){
-        const url = `/c08/video/tang-view`;
+        const url = `/api/video/tang-view`;
         return axiosConfig.get(url, {params})
     },
    addVideo(data, onProgress) {
-        const url = "/c08/video/add";
+        const url = "/api/video/add";
         return axiosMulter.post(url, data, {
             onUploadProgress: (progressEvent) => {
                 if (progressEvent.total && onProgress) {
@@ -24,11 +24,11 @@ const videoApi = {
         });
     },
     editVideo(data){
-        const url =`/c08/video/edit/${data.id_edit}`;
+        const url =`/api/video/edit/${data.id_edit}`;
         return axiosConfig.put(url, data)
     },
     deleteVideo(id,params){
-        const url = `/c08/video/delete/${id}`;
+        const url = `/api/video/delete/${id}`;
         return axiosConfig.delete(url, {params})
     }
 };

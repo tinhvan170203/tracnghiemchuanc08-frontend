@@ -33,37 +33,37 @@ const commonApi = {
     },
     // thitracnghiem
     getAllMonthi() {
-        const url = `/c08/public/fetch/danhsachmonthi`;
+        const url = `/api/public/fetch/danhsachmonthi`;
         return axiosCommon.get(url)
     },
     getInfoCuocthi(id) {
-        const url = `/c08/public/info/cuoc-thi/${id}`;
+        const url = `/api/public/info/cuoc-thi/${id}`;
         return axiosCommon.get(url)
     },
     loginTest(data) {
-        const url = "/c08/public/loginTest";
+        const url = "/api/public/loginTest";
         return axiosCommon.post(url, data)
     },
     checkedTest(id, secretKey) {
-        const url = `/c08/public/checkedTest/${id}`;
+        const url = `/api/public/checkedTest/${id}`;
         return axiosCommon.get(url, {
             params: { secretKey },
             headers: { "x-exam-key": secretKey },
         })
     },
     previewTest(id, secretKey) {
-        const url = `/c08/public/preview/${id}`;
+        const url = `/api/public/preview/${id}`;
         return axiosCommon.get(url, {
             params: { secretKey },
             headers: { "x-exam-key": secretKey },
         })
     },
     previewTestAdmin(id) {
-        const url = `/c08/mon-thi/bai-thi/${id}/preview`;
+        const url = `/api/mon-thi/bai-thi/${id}/preview`;
         return axiosConfig.get(url)
     },
     submitTest(id, answers, secretKey) {
-        const url = `/c08/public/${id}/submitTest`;
+        const url = `/api/public/${id}/submitTest`;
         return axiosCommon.post(
             url,
             { secretKey, answers },
@@ -71,23 +71,23 @@ const commonApi = {
         )
     },
     checkCuocthi(params) {
-        const url = `/c08/public/checkedCuocthi`;
+        const url = `/api/public/checkedCuocthi`;
         return axiosCommon.get(url, { params })
     },
     saveFile(data) {
-        const url = "/c08/public/save-file";
+        const url = "/api/public/save-file";
         return axiosMulter.post(url, data)
     },
     fetchTailieus(params) {
-        const url = `/c08/public/tai-lieu/fetch`;
+        const url = `/api/public/tai-lieu/fetch`;
         return axiosCommon.get(url, { params })
     },
     fetchAuthTailieus(params) {
-        const url = `/c08/public/auth/tai-lieu/fetch`;
+        const url = `/api/public/auth/tai-lieu/fetch`;
         return axiosCommon.get(url, { params })
     },
     deleteTailieu(params) {
-        const url = `/c08/public/tai-lieu/delete`;
+        const url = `/api/public/tai-lieu/delete`;
         return axiosConfig.delete(url, { params })
     }
 };

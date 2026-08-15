@@ -2,12 +2,10 @@ import * as React from "react";
 import PropTypes from "prop-types";
 import { useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
-import TableFooter from "@mui/material/TableFooter";
 import TableHead from "@mui/material/TableHead";
 import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
@@ -18,6 +16,14 @@ import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import BodyTableKetquaThi from "./BodyTableKetquaThi";
+
+const headCellSx = {
+  fontSize: "14px",
+  color: "#fff",
+  padding: "8px 8px",
+  backgroundColor: "#1976d2",
+  whiteSpace: "nowrap",
+};
 
 function TablePaginationActions(props) {
   const theme = useTheme();
@@ -91,173 +97,57 @@ TablePaginationActions.propTypes = {
 export default function CustomPaginationActionsTableKetquaThi({
   list,
   onClickOpenDialogEdit,
-  cuocthi
+  cuocthi,
+  total = 0,
+  page = 0,
+  rowsPerPage = 20,
+  onPageChange,
+  onRowsPerPageChange,
 }) {
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
-
-  // Avoid a layout jump when reaching the last page with empty list.
-  const emptyRows =
-    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - list.length) : 0;
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  // const roles = useSelector((state) => state.authReducer.roles_x01);
   return (
     <>
       <TableContainer component={Paper}>
         <Table aria-label="custom pagination table">
           <TableHead>
             <TableRow>
-              <TableCell
-                align="left"
-                style={{
-                  fontSize: "14px",
-                  color: "#fff",
-                  padding: "8px 8px",
-                  backgroundColor: "#1976d2",
-                }}
-              >
-                STT
-              </TableCell>
-              <TableCell
-                align="left"
-                style={{
-                  fontSize: "14px",
-                  color: "#fff",
-                  padding: "8px 8px",
-                  backgroundColor: "#1976d2",
-                  minWidth: "150px"
-                }}
-              >
-                Họ tên
-              </TableCell>
-              <TableCell
-                align="left"
-                style={{
-                  fontSize: "14px",
-                  color: "#fff",
-                  padding: "8px 8px",
-                  backgroundColor: "#1976d2",
-                }}
-              >
-                Ngày sinh
-              </TableCell>
-              <TableCell
-                align="left"
-                style={{
-                  fontSize: "14px",
-                  color: "#fff",
-                  padding: "8px 8px",
-                  backgroundColor: "#1976d2",
-                }}
-              >
-                Đơn vị (Lớp)
-              </TableCell>
-              <TableCell
-                align="left"
-                style={{
-                  fontSize: "14px",
-                  color: "#fff",
-                  padding: "8px 8px",
-                  backgroundColor: "#1976d2",
-                }}
-              >
-                SĐT
-              </TableCell>
-              <TableCell
-                align="left"
-                style={{
-                  fontSize: "14px",
-                  color: "#fff",
-                  padding: "8px 8px",
-                  backgroundColor: "#1976d2",
-                }}
-              >
-                Hộ khẩu
-              </TableCell>
-              <TableCell
-                align="left"
-                style={{
-                  fontSize: "14px",
-                  color: "#fff",
-                  padding: "8px 8px",
-                  backgroundColor: "#1976d2",
-                }}
-              >
-                Số câu trả lời đúng
-              </TableCell>
-              <TableCell
-                align="left"
-                style={{
-                  fontSize: "14px",
-                  color: "#fff",
-                  padding: "8px 8px",
-                  backgroundColor: "#1976d2",
-                }}
-              >
-                Thời gian hoàn thành (ms)
-              </TableCell>
-              <TableCell
-                align="left"
-                style={{
-                  fontSize: "14px",
-                  color: "#fff",
-                  padding: "8px 8px",
-                  backgroundColor: "#1976d2",
-                }}
-              >
-                Xếp hạng
-              </TableCell>
-              <TableCell
-                align="center"
-                style={{
-                  fontSize: "14px",
-                  color: "#fff",
-                  padding: "8px 8px",
-                  backgroundColor: "#1976d2",
-                }}
-              >
-                Thao tác
-              </TableCell>
+              <TableCell align="left" style={headCellSx}>STT</TableCell>
+              <TableCell align="left" style={headCellSx}>Xếp hạng</TableCell>
+              <TableCell align="left" style={{ ...headCellSx, minWidth: "150px" }}>Họ tên</TableCell>
+              <TableCell align="left" style={headCellSx}>Năm sinh</TableCell>
+              <TableCell align="left" style={headCellSx}>Giới tính</TableCell>
+              <TableCell align="left" style={headCellSx}>Loại xe</TableCell>
+              <TableCell align="left" style={headCellSx}>Hạng GPLX</TableCell>
+              {/* <TableCell align="left" style={headCellSx}>Nghề nghiệp</TableCell> */}
+              <TableCell align="left" style={headCellSx}>Địa chỉ</TableCell>
+              <TableCell align="left" style={headCellSx}>SĐT</TableCell>
+              {/* <TableCell align="left" style={headCellSx}>Hộ khẩu</TableCell> */}
+              <TableCell align="left" style={headCellSx}>Số câu đúng</TableCell>
+              <TableCell align="left" style={headCellSx}>Xếp loại</TableCell>
+              <TableCell align="left" style={headCellSx}>T/gian</TableCell>
+              {/* <TableCell align="left" style={headCellSx}>Kết thúc</TableCell>
+              <TableCell align="left" style={headCellSx}>Thời gian làm bài</TableCell> */}
+              <TableCell align="center" style={headCellSx}>Thao tác</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {(rowsPerPage > 0
-              ? list.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              : list
-            ).map((row, index) => (
-
+            {list.map((row, index) => (
               <BodyTableKetquaThi
                 row={row}
                 page={page}
                 rowsPerPage={rowsPerPage}
                 cuocthi={cuocthi}
-                key={index}
+                key={row._id || index}
                 index={index}
                 onClickOpenDialogEdit={onClickOpenDialogEdit}
               />
             ))}
-            {emptyRows > 0 && (
-              <TableRow style={{ height: 53 * emptyRows }}>
-                <TableCell colSpan={6} />
-              </TableRow>
-            )}
           </TableBody>
         </Table>
       </TableContainer>
       <div>
         <TablePagination
-          rowsPerPageOptions={[10, 25, 50, 100, { label: "Tất cả", value: -1 }]}
-          // colSpan={3}
-          count={list.length}
+          rowsPerPageOptions={[10, 20, 50, 100]}
+          count={total}
           rowsPerPage={rowsPerPage}
           page={page}
           SelectProps={{
@@ -267,8 +157,8 @@ export default function CustomPaginationActionsTableKetquaThi({
             native: true,
           }}
           component={"div"}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
+          onPageChange={onPageChange}
+          onRowsPerPageChange={onRowsPerPageChange}
           ActionsComponent={TablePaginationActions}
           labelRowsPerPage="Số bản ghi hiển thị trên mỗi trang"
           labelDisplayedRows={function defaultLabelDisplayedRows({

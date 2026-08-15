@@ -8,7 +8,7 @@ import MenuItem from "@mui/material/MenuItem";
 
 
 export const SelectFieldNoneAll = (props) => {
-  const { name, label, disabled, form, options} = props;
+  const { name, label, disabled, form, options, focused } = props;
 
   const {
     formState: { errors },
@@ -19,8 +19,8 @@ export const SelectFieldNoneAll = (props) => {
   const hasError = errors[name] && formState.touchedFields[name];
 
   return (
-    <FormControl size="small" fullWidth margin="normal" color="primary">
-      <InputLabel id={name}>{label}</InputLabel>
+    <FormControl size="small" fullWidth margin="normal" color="primary" focused={focused}>
+      <InputLabel id={name} sx={{ fontSize: 13 }}>{label}</InputLabel>
 
       <Controller
         control={form.control}
@@ -32,6 +32,11 @@ export const SelectFieldNoneAll = (props) => {
                 autoWidth={false}
                 labelId={name}
                 disabled={disabled}
+                sx={{
+                  "& .MuiSelect-select": {
+                    padding: "6px 14px",
+                  },
+                }}
             >
             {options?.length === 0 ? (
               <MenuItem value="" disabled>Không có lựa chọn</MenuItem>

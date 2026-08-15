@@ -3,39 +3,39 @@ import axiosConfig from "./axiosConfig";
 
 const userApi = {
     login(data){
-        const url = 'c08/auth/login';
+        const url = 'api/auth/login';
         return axiosCommon.post(url, data)
     }, 
     changePage(data){
-        const url = 'c08/auth/change-pass';
+        const url = 'api/auth/change-pass';
         return axiosConfig.post(url, data)
     }, 
     logout(){
-        const url = `c08/auth/logout`;
+        const url = `api/auth/logout`;
         return axiosConfig.get(url)
     },
     getMe(){
-        const url = `c08/auth/me`;
+        const url = `api/auth/me`;
         return axiosConfig.get(url)
     },
     getUsers(page){
-        const url = `c08/auth/users/fetch`;
+        const url = `api/auth/users/fetch`;
         return axiosConfig.get(url, {params: {page: page}})
     },
     addUser(data){
-        const url = "c08/auth/users/add";
+        const url = "api/auth/users/add";
         return axiosConfig.post(url, data)
     },
     editUser(data){
-        const url =`c08/auth/users/edit/${data.id_edit}`;
+        const url =`api/auth/users/edit/${data.id_edit}`;
         return axiosConfig.put(url, data)
     },
     deleteUser(id){
-        const url = `c08/auth/users/delete/${id}`;
+        const url = `api/auth/users/delete/${id}`;
         return axiosConfig.delete(url)
     },
     editQuanlydonvi(data){
-        const url =`c08/auth/users/edit-phanquyendonvi/${data.id_edit}`;
+        const url =`api/auth/users/edit-phanquyendonvi/${data.id_edit}`;
         return axiosConfig.put(url, data)
     },
 };

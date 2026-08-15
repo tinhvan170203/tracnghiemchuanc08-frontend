@@ -4,7 +4,7 @@ import { Controller } from "react-hook-form";
 
 
 export const InputField = (props) => {
-  const { name, label, disabled, form,type,value } = props;
+  const { name, label, disabled, form, type, maxLength, inputMode, digitsOnly } = props;
  
   const {
     formState: { errors },
@@ -22,32 +22,25 @@ export const InputField = (props) => {
           name={name}
           focused
           inputProps={{
-    style: {
-      // fontSize: 24, // Chỉnh size chữ ở đây
-      padding: 6,  // Có thể chỉnh thêm padding nếu chữ quá to
-    },
-  }}
+            style: {
+              padding: 6,
+            },
+            maxLength,
+            inputMode,
+          }}
           sx={{
-            "& .MuiFormHelperText-root": {color: '#d32f2f'},//styles the label
-            // fontSize: "12px"
-            // "& .MuiOutlinedInput-root": {
-            //   "& > fieldset": { borderColor: "#ab0000" },
-            // },
-            // "& .MuiOutlinedInput-root:hover": {
-            //   "& > fieldset": {
-            //     borderColor: "#ab0000",
-            //     borderWidth: '1px'
-            //   }
-            // }
+            "& .MuiFormHelperText-root": {color: '#d32f2f'},
           }}
            autoComplete="on"
-          // multiline
-          // value={value}
-           // 2. Chỉnh size nhãn (Label)
   InputLabelProps={{ style: { fontSize: 13 } }} 
           {...field}
+          onChange={(e) => {
+            let value = e.target.value;
+            if (digitsOnly) value = value.replace(/\D/g, "");
+            if (maxLength) value = value.slice(0, maxLength);
+            field.onChange(value);
+          }}
           type={type}
-          // maxRows={3}
           margin="normal"
           label={label}
           fullWidth

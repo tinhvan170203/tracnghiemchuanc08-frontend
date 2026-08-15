@@ -17,6 +17,7 @@ import { useSnackbar } from "notistack";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { fetchCurrentUser, logoutAccount } from "../../auth/authSlice";
 import { unwrapResult } from "@reduxjs/toolkit";
+import { HEADER_2 } from "../../../constant/constant";
 
 export default function AdminDarboard() {
   const { enqueueSnackbar } = useSnackbar();
@@ -123,8 +124,9 @@ export default function AdminDarboard() {
                 Tuyên truyền, đánh giá nhận thức pháp luật về Trật tự an toàn
                 giao thông
               </span>
-              <span className="md:hidden text-[12px] md:text-[14px] uppercase">
-                Cục cảnh sát giao thông - Bộ công an
+              <span className="md:hidden text-[8px] md:text-[14px] uppercase">
+                 Tuyên truyền, đánh giá nhận thức pháp luật về Trật tự an toàn
+                giao thông
               </span>
             </p>
 
@@ -332,7 +334,7 @@ export default function AdminDarboard() {
         <div className="flex items-center justify-center">
           <img src="/logoc08.png" className="w-12" />
         </div>
-        <h5>@2026 - Bản quyền thuộc Công an tỉnh Hưng Yên</h5>
+        <p className="text-center  font-semibold uppercase text-[12px]">Cục Cảnh sát giao thông và Công an tỉnh Hưng Yên phối hợp thực hiện</p>
         <h5 className="font-light">
           Ứng dụng công nghệ thông tin trong công tác tuyên truyền, phổ biến,
           giáo dục pháp luật về trật tự an toàn giao thông

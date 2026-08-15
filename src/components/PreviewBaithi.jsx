@@ -28,8 +28,10 @@ export default function PreviewBaithi({
   onCloseDialogPreviewBaithi,
   idBaithi,
   secretKey,
+  Mode
 }) {
 
+// sửa chỉ xem lại những câu sai
   const [questions, setQuestions] = useState([]);
   const [choicedTrue, setChoicedTrue] = useState(0);
 
@@ -52,7 +54,16 @@ export default function PreviewBaithi({
             );
           }).filter(item => Object.keys(item).length > 0);;
 
-          arr.push({ question: item.questionlist.question, image: item.questionlist.image, answer: item.questionlist.answer, choice: item.choice, _id: item.questionlist._id, options: result })
+
+          //sửa chỉ lấy ra danh sách các câu hỏi sai
+          if(Mode && Mode === "Chỉ xem câu sai" && item.questionlist.answer !== item.choice){
+            console.log(1)
+            arr.push({ question: item.questionlist.question, image: item.questionlist.image, answer: item.questionlist.answer, choice: item.choice, _id: item.questionlist._id, options: result })
+          };
+          
+         if(Mode !== "Chỉ xem câu sai"){
+            arr.push({ question: item.questionlist.question, image: item.questionlist.image, answer: item.questionlist.answer, choice: item.choice, _id: item.questionlist._id, options: result })
+          }
         });
 
         setQuestions(arr)
@@ -85,28 +96,19 @@ export default function PreviewBaithi({
         aria-describedby="alert-dialog-slide-description"
         sx={{ zIndex: 1500 }} // Giá trị mặc định của Dialog là 1300
       >
-        {/* <DialogTitle
-          style={{
-            display: "flex",
-            borderBottom: "1px solid #ccc",
-            margin: "0 12px",
-          }}
-        > */}
-          {/* <AutoAwesomeMotionIcon style={{ color: "#333", fontSize: "32px" }} /> */}
           <CancelButton onClick={() => onCloseDialogPreviewBaithi()}>
             <CancelIcon style={{ color: "#d32b2b" }} />
           </CancelButton>
         {/* </DialogTitle> */}
         <div className="px-1 py-2">
           <div className="md:px-12 py-4 md:mx-2 mt-4">
-            <p className="text-sm md:text-[16px] font-semibold">Bạn đã trả lời đúng {choicedTrue} đáp án.</p>
-            <p className="mb-4 italic text-red-600 text-sm md:text-[16px]"> Những câu hỏi bạn trả lời sai, đáp án đúng là đáp án được tô đỏ.</p>
+            <p className="text-sm md:text-[16px] font-semibold">Bạn đã trả lời đúng {choicedTrue} câu.</p>
+            <p className="mb-4 italic text-red-600 text-sm md:text-[16px]"> Dưới đây là {questions.length} câu câu bạn đã trả lời sai:</p>
             {questions?.map((question, index) => (
               <CauhoiPreview
                 key={question._id}
                 question={question}
                 index={index + 1}
-              // onHandleChangeChoice={handleChangeChoice}
               />
             ))}
           </div>

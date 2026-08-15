@@ -109,8 +109,9 @@ function ChangePassPage(props) {
               </p>
             </Link>
           </form>
-          <p className="text-center text-slate-700 font-bold text-[13px] md:text-md">Bản quyền thuộc Công an tỉnh Hưng Yên</p>
-          <p className="text-center text-slate-600 text-[12px] md:text-md">Ứng dụng công nghệ thông tin trong công tác tuyên truyền, phổ biến, giáo dục pháp luật về trật tự an toàn giao thông</p>
+                 <p className="text-center text-gray-500 font-semibold uppercase text-[14px]">Cục Cảnh sát giao thông và Công an tỉnh Hưng Yên</p>
+                 <p className="text-center text-gray-500 font-semibold uppercase text-[14px]">phối hợp thực hiện</p>
+          <p className="text-center text-slate-600 text-[10px] md:text-md">Ứng dụng công nghệ thông tin trong công tác tuyên truyền, phổ biến, giáo dục pháp luật về trật tự an toàn giao thông</p>
         </div>
       </div>
     </div>

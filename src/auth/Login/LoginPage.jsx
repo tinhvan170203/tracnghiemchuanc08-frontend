@@ -125,8 +125,9 @@ function LoginPage(props) {
           </Link>
         </form>
 
-        <p className="text-center text-gray-700 font-semibold text-[14px] md:text-[16px]">Bản quyền thuộc Công an tỉnh Hưng Yên</p>
-        <p className="text-center text-slate-600 text-[12px] md:text-[14px]">Ứng dụng công nghệ thông tin trong công tác tuyên truyền, phổ biến, giáo dục pháp luật về trật tự an toàn giao thông</p>
+         <p className="text-center text-gray-500 font-semibold uppercase text-[14px]">Cục Cảnh sát giao thông và Công an tỉnh Hưng Yên phối hợp thực hiện</p>
+                 {/* <p className="text-center text-gray-500 font-semibold uppercase text-[14px]"></p> */}
+        <p className="text-center text-slate-600 text-[10px] md:text-[14px]">Ứng dụng công nghệ thông tin trong công tác tuyên truyền, phổ biến, giáo dục pháp luật về trật tự an toàn giao thông</p>
 
       </div>
 

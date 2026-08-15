@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useEffect, useState } from 'react';
+import React, { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import monthiApi from '../../../api/monthiApi';
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -12,40 +12,121 @@ import QRCodeComponent from '../../../components/QRCode';
 import { API_SERVER } from '../../../api/apiServer';
 import SearchIcon from '@mui/icons-material/Search'
 import TopCauHoiSai from '../components/TopCauhoiSai';
+import { useSnackbar } from 'notistack';
 
 const ChartResult = lazy(() => import('../components/ChartResult'));
 
 const KetquaThi = () => {
   let { id } = useParams();
+  const { enqueueSnackbar } = useSnackbar();
   const [link, setLink] = useState('');
   const [openModalLoading, setOpenModalLoading] = useState(true);
-  const [excelData, setExcelData] = useState([]);
   const [totalNopbai, setTotalNopbai] = useState(0);
   let [totalLuotthi, setTotalLuotthi] = useState(0);
   let [cuocthi, setCuocthi] = useState(null);
   let [list, setList] = useState([]);
-  let [listBase, setListBase] = useState([]);
   const [openDialogEdit, setOpenDialogEdit] = useState({
     status: false,
     item: null,
   });
 
-  const [name, setName] = useState("");
+  const [fileName, setFileName] = useState("");
   const [dataKhongdat, setDataKhongdat] = useState(0);
   const [dataTrungbinh, setDataTrungbinh] = useState(0);
   const [dataKha, setDataKha] = useState(0);
   const [dataGioi, setDataGioi] = useState(0);
   const [dataXuatsac, setDataXuatsac] = useState(0);
 
-  const [tungay, setTungay] = useState("")
-  const [denngay, setDenngay] = useState("")
+  const [tungay, setTungay] = useState("");
+  const [denngay, setDenngay] = useState("");
+  const [xeploai, setXeploai] = useState("");
+  const [hoten, setHoten] = useState("");
+
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [exporting, setExporting] = useState(false);
+
+  const applyResponse = useCallback((res) => {
+    const s = res.data.summary || {};
+    setLink(`${API_SERVER}${id}`);
+    setTotalNopbai(s.totalNopbai || 0);
+    setDataKhongdat(s.khongdat || 0);
+    setDataTrungbinh(s.trungbinh || 0);
+    setDataKha(s.kha || 0);
+    setDataGioi(s.gioi || 0);
+    setDataXuatsac(s.xuatsac || 0);
+    setTotalLuotthi(s.totalLuotthi ?? res.data.total ?? 0);
+    setCuocthi(res.data.cuocthi);
+    setList(res.data.data || []);
+    setTotal(res.data.total || 0);
+    setPage(Math.max(0, (res.data.page || 1) - 1));
+    if (res.data.limit) setRowsPerPage(res.data.limit);
+  }, [id]);
+
+  const fetchKetqua = useCallback(async ({
+    page: pageArg,
+    limit: limitArg,
+    tungay: tungayArg,
+    denngay: denngayArg,
+    xeploai: xeploaiArg,
+    hoten: hotenArg,
+    showLoading = true,
+  } = {}) => {
+    if (showLoading) setOpenModalLoading(true);
+    try {
+      const res = await monthiApi.getKetquaThi(id, {
+        tungay: tungayArg ?? tungay,
+        denngay: denngayArg ?? denngay,
+        xeploai: xeploaiArg ?? xeploai,
+        hoten: hotenArg ?? hoten,
+        page: (pageArg ?? page) + 1,
+        limit: limitArg ?? rowsPerPage,
+      });
+      applyResponse(res);
+    } finally {
+      if (showLoading) setOpenModalLoading(false);
+    }
+  }, [id, tungay, denngay, xeploai, hoten, page, rowsPerPage, applyResponse]);
 
   const exportToExcel = async () => {
-    const XLSX = await import('xlsx');
-    const worksheet = XLSX.utils.json_to_sheet(excelData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "KetQua");
-    XLSX.writeFile(workbook, `KetQuaThi_${name}.xlsx`);
+    setExporting(true);
+    try {
+      const res = await monthiApi.exportKetquaExcel(id, {
+        tungay,
+        denngay,
+        xeploai,
+        hoten,
+      });
+      const contentType = res.headers?.["content-type"] || "";
+      if (contentType.includes("application/json")) {
+        const text = await res.data.text();
+        const parsed = JSON.parse(text);
+        throw new Error(parsed.message || "Không xuất được file Excel");
+      }
+      const blob = new Blob([res.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const safe =
+        (fileName || cuocthi?.tencuocthi || "export")
+          .replace(/[^\w\-]+/g, "_")
+          .slice(0, 60) || "export";
+      a.download = `KetQuaThi_${safe}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      enqueueSnackbar(err?.message || "Không xuất được file Excel", {
+        variant: "error",
+      });
+    } finally {
+      setExporting(false);
+    }
   };
 
   const handleOpenDialogEdit = (item) => {
@@ -63,95 +144,41 @@ const KetquaThi = () => {
   };
 
   useEffect(() => {
-    const getKetquaThi = async () => {
-      let [res] = await Promise.all([
-        monthiApi.getKetquaThi(id, { tungay: "", denngay: "" }),
-        // monthiApi.thongkeCauhoiSai({idCuocthi: id})
-      ]);
-
-      // console.log(res1)
-      const data = res.data.data;
-      const cauHoiCount = res.data.cuocthi.soluongcauhoi;
-      let khongDat = 0, trungBinh = 0, kha = 0, gioi = 0, xuatSac = 0, nopBai = 0;
-
-      data.forEach(item => {
-        if (item.time > 0) {
-          nopBai++;
-          const ratio = item.socaudung / cauHoiCount;
-          if (ratio < 0.5) khongDat++;
-          else if (ratio < 0.7) trungBinh++;
-          else if (ratio < 0.8) kha++;
-          else if (ratio < 0.9) gioi++;
-          else xuatSac++;
-        }
-      });
-
-      setLink(`${API_SERVER}${id}`);
-      setTotalNopbai(nopBai);
-      setDataKhongdat(khongDat);
-      setDataTrungbinh(trungBinh);
-      setDataKha(kha);
-      setDataGioi(gioi);
-      setDataXuatsac(xuatSac);
-      setTotalLuotthi(res.data.total);
-      setCuocthi(res.data.cuocthi);
-      setList(res.data.data);
-      setListBase(res.data.data);
-      setOpenModalLoading(false);
-      setExcelData(res.data.data.map(item => ({
-        xephang: item.rank,
-        hoten: item.thongtinthisinh.name,
-        ngaysinh: item.thongtinthisinh.birthday,
-        donvi: item.thongtinthisinh.phone,
-        phone: item.thongtinthisinh.donvi,
-        socaudung: item.socaudung,
-        thoigianhoanthanh: item.time < 0 ? "" : item.time
-      })));
+    const load = async () => {
+      setOpenModalLoading(true);
+      try {
+        const res = await monthiApi.getKetquaThi(id, {
+          tungay: "",
+          denngay: "",
+          xeploai: "",
+          hoten: "",
+          page: 1,
+          limit: 20,
+        });
+        applyResponse(res);
+      } finally {
+        setOpenModalLoading(false);
+      }
     };
-
-    getKetquaThi();
-  }, [id]);
+    load();
+  }, [id, applyResponse]);
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    let res = await monthiApi.getKetquaThi(id, { tungay, denngay });
-    const data = res.data.data;
-    const cauHoiCount = res.data.cuocthi.soluongcauhoi;
-    let khongDat = 0, trungBinh = 0, kha = 0, gioi = 0, xuatSac = 0, nopBai = 0;
+    setPage(0);
+    await fetchKetqua({ page: 0 });
+  };
 
-    data.forEach(item => {
-      if (item.time > 0) {
-        nopBai++;
-        const ratio = item.socaudung / cauHoiCount;
-        if (ratio < 0.5) khongDat++;
-        else if (ratio < 0.7) trungBinh++;
-        else if (ratio < 0.8) kha++;
-        else if (ratio < 0.9) gioi++;
-        else xuatSac++;
-      }
-    });
+  const handleChangePage = async (_event, newPage) => {
+    setPage(newPage);
+    await fetchKetqua({ page: newPage, showLoading: false });
+  };
 
-    // setLink(`${API_SERVER}${id}`);
-    setTotalNopbai(nopBai);
-    setDataKhongdat(khongDat);
-    setDataTrungbinh(trungBinh);
-    setDataKha(kha);
-    setDataGioi(gioi);
-    setDataXuatsac(xuatSac);
-    setTotalLuotthi(res.data.total);
-    // setCuocthi(res.data.cuocthi);
-    setList(res.data.data);
-    setListBase(res.data.data);
-    setOpenModalLoading(false);
-    setExcelData(res.data.data.map(item => ({
-      xephang: item.rank,
-      hoten: item.thongtinthisinh.name,
-      ngaysinh: item.thongtinthisinh.birthday,
-      donvi: item.thongtinthisinh.phone,
-      phone: item.thongtinthisinh.donvi,
-      socaudung: item.socaudung,
-      thoigianhoanthanh: item.time < 0 ? "" : item.time
-    })));
+  const handleChangeRowsPerPage = async (event) => {
+    const next = parseInt(event.target.value, 10);
+    setRowsPerPage(next);
+    setPage(0);
+    await fetchKetqua({ page: 0, limit: next, showLoading: false });
   };
 
   return (
@@ -159,7 +186,6 @@ const KetquaThi = () => {
 
       <main className="flex-1 overflow-y-auto">
         <div className="p-2">
-          {/* Title & Badge */}
           <div className="mb-2">
             <div className="flex items-center space-x-3 mb-2">
               <div className="bg-blue-100 p-1 rounded-lg text-blue-600">
@@ -173,11 +199,8 @@ const KetquaThi = () => {
             </div>
           </div>
 
-          {/* Top Cards Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-2">
-            {/* Exam Info Card */}
             <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-              {/* <h4 className="text-lg font-bold mb-6 text-slate-800 border-b border-slate-50 pb-2">Thông tin kỳ thi</h4> */}
               <div className="flex justify-center mb-2">
                 <div className="bg-slate-50 rounded-xl border border-dashed border-slate-300">
                   <QRCodeComponent link={link} />
@@ -187,7 +210,7 @@ const KetquaThi = () => {
                 <div className="relative">
                   <p className="text-xs font-bold text-slate-400 mb-1 uppercase tracking-tighter">Link dự thi</p>
                   <div className="flex items-center bg-slate-50 border border-slate-200 rounded-lg p-2 overflow-hidden">
-                    <a href={link} target='_blank' className="text-blue-600 text-xs truncate flex-1">{link}</a>
+                    <a href={link} target='_blank' rel="noreferrer" className="text-blue-600 text-xs truncate flex-1">{link}</a>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -205,13 +228,12 @@ const KetquaThi = () => {
                   </div>
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
                     <p className="text-[10px] font-bold text-slate-400 uppercase">Lượt thi</p>
-                    <p className="text-xl font-bold text-slate-800 flex items-center justify-between">{totalLuotthi} <span className='font-normal italic text-green-700 text-[12px]'>{list.length} luợt nộp bài</span></p>
+                    <p className="text-xl font-bold text-slate-800 flex items-center justify-between">{totalLuotthi} <span className='font-normal italic text-green-700 text-[12px]'>{totalNopbai} lượt nộp bài</span></p>
                   </div>
                 </div>
               </div>
             </section>
 
-            {/* Statistics Card */}
             <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
               <h4 className="text-lg font-bold mb-6 text-slate-800 border-b border-slate-50 pb-2">Thống kê xếp loại</h4>
               <div className="space-y-3">
@@ -236,7 +258,6 @@ const KetquaThi = () => {
               </p>
             </section>
 
-            {/* Chart Card */}
             <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
               <div className="flex justify-between items-center mb-6">
                 <h4 className="text-lg font-bold text-slate-800">Biểu đồ phân bổ điểm</h4>
@@ -261,7 +282,6 @@ const KetquaThi = () => {
             <TopCauHoiSai idCuocThi={id} />
           </div>
 
-          {/* Data Table Section */}
           <section className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
             <div className="p-6 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <h4 className="text-[14px] text-slate-800 uppercase tracking-tight flex items-center">
@@ -273,12 +293,28 @@ const KetquaThi = () => {
               <form onSubmit={(e) => handleSearch(e)}>
                 <div className='flex md:items-center flex-col md:flex-row justify-between md:space-x-4 space-y-1'>
                   <div className='flex items-center justify-between space-x-2'>
+                    <label className='text-[12px] font-semibold'>Họ tên</label>
+                    <input type="text" value={hoten} onChange={(e) => setHoten(e.target.value)} className='outline-none border text-[12px] p-1 bg-gray-100' />
+                  </div>
+                  <div className='flex items-center justify-between space-x-2'>
                     <label className='text-[12px] font-semibold'>Từ ngày</label>
-                    <input type="date" value={tungay} onChange={(e) => setTungay(e.target.value)} required className='outline-none border text-[12px] p-1 bg-gray-100' />
+                    <input type="date" value={tungay} onChange={(e) => setTungay(e.target.value)} className='outline-none border text-[12px] p-1 bg-gray-100' />
                   </div>
                   <div className='flex items-center justify-between space-x-2'>
                     <label className='text-[12px] font-semibold'>Đến ngày</label>
-                    <input type="date" required value={denngay} onChange={(e) => setDenngay(e.target.value)} className='outline-none border text-[12px] p-1 bg-gray-100' />
+                    <input type="date" value={denngay} onChange={(e) => setDenngay(e.target.value)} className='outline-none border text-[12px] p-1 bg-gray-100' />
+                  </div>
+                  <div className='flex items-center justify-between space-x-2'>
+                    <label className='text-[12px] font-semibold'>Xếp loại</label>
+                   
+                   <select value={xeploai} onChange={(e)=>setXeploai(e.target.value)} className='outline-none border text-[12px] p-1 bg-gray-100'>
+                      <option value="">Tất cả</option>
+                      <option value="Xuất sắc">Xuất sắc</option>
+                      <option value="Giỏi">Giỏi</option>
+                      <option value="Khá">Khá</option>
+                      <option value="Trung bình">Trung bình</option>
+                      <option value="Không đạt">Không đạt</option>
+                   </select>
                   </div>
                   <IconButton type='submit'>
                     <SearchIcon />
@@ -288,18 +324,19 @@ const KetquaThi = () => {
               <div className="flex items-center bg-slate-50 border border-slate-200 rounded-lg pl-3 focus-within:ring-2 focus-within:ring-blue-500 transition-all">
                 <input
                   type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={fileName}
+                  onChange={(e) => setFileName(e.target.value)}
                   className="bg-transparent border-none outline-none py-2 text-sm w-full md:w-48 placeholder:text-slate-400"
                   placeholder="Tên file excel..."
                 />
                 <Button
                   onClick={exportToExcel}
+                  disabled={exporting}
                   className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-none capitalize rounded-l-none px-4"
                   variant="contained"
                   startIcon={<FileDownloadIcon />}
                 >
-                  Tải Excel
+                  {exporting ? "Đang tải..." : "Tải Excel"}
                 </Button>
               </div>
             </div>
@@ -308,6 +345,11 @@ const KetquaThi = () => {
               <CustomPaginationActionsTableKetquaThi
                 list={list}
                 cuocthi={cuocthi}
+                total={total}
+                page={page}
+                rowsPerPage={rowsPerPage}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
                 item={openDialogEdit.item}
                 onClickOpenDialogEdit={handleOpenDialogEdit}
               />
@@ -317,13 +359,13 @@ const KetquaThi = () => {
 
       </main>
 
-      {/* Modals & Loading */}
       {openModalLoading && <ModalLoading open={openModalLoading} />}
       <PreviewBaithi
         open={openDialogEdit.status}
         item={openDialogEdit.item}
         onCloseDialogPreviewBaithi={handleCloseDialogEdit}
         idBaithi={openDialogEdit.item?._id}
+
       />
     </div>
   );
