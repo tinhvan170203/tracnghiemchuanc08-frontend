@@ -7,6 +7,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
 import { useSelector } from "react-redux";
+import Switch from "@mui/material/Switch";
 
 const funcCompare = (value) => {
   if(value === "option_a"){
@@ -30,6 +31,7 @@ const BodyTable = ({
   row,
   onClickOpenDialogEdit,
   onClickOpenDialogDelete,
+  onToggleActive,
 }) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
@@ -91,6 +93,20 @@ const BodyTable = ({
         style={{ fontWeight: "bold" }}
       >
         {funcCompare(row.answer)}
+      </TableCell>
+      <TableCell
+        className="border-r border-slate-300"
+        align="center"
+      >
+        {roles && roles.includes("sửa câu hỏi") ? (
+          <Switch
+            checked={row.active !== false}
+            onChange={(e) => onToggleActive(row, e.target.checked)}
+            color="success"
+          />
+        ) : (
+          row.active !== false ? "Có" : "Không"
+        )}
       </TableCell>
       <TableCell
         align="right"

@@ -37,13 +37,13 @@ const Chuyende = () => {
 
   const roles = useSelector((state) => (state.authReducer.roles_x01));
   const [monthiList, setMonthiList] = useState([]);
-  const [id_monthi, setIdMonthi] = useState(null);
   const [cauhoiList, setCauhoiList] = useState([])
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
   let [searchParams, setSearchParams] = useSearchParams();
   const [openModalLoading, setOpenModalLoading] = useState(false);
   const [donviList, setDonviList] = useState([])
+  const id_monthi = searchParams.get("id_monthi") || null;
 
   const [openDialogEdit, setOpenDialogEdit] = useState({
     status: false,
@@ -71,6 +71,7 @@ const Chuyende = () => {
     status: false,
     id_Delete: null,
   });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   //open dialog delete
   const handleOpenDialogDelete = (id) => {
@@ -81,6 +82,7 @@ const Chuyende = () => {
   };
 
   const handleCloseDialogDelete = () => {
+    if (isDeleting) return;
     setOpenDialogDelete({
       ...openDialogDelete,
       status: false,
@@ -88,6 +90,7 @@ const Chuyende = () => {
   };
 
   const handleCancelDelete = () => {
+    if (isDeleting) return;
     setOpenDialogDelete({
       ...openDialogDelete,
       status: false,
@@ -130,6 +133,17 @@ const Chuyende = () => {
   }, [])
 
   useEffect(() => {
+    if (!monthiList?.length || !id_monthi) return;
+    const allowed = monthiList.some((i) => String(i._id) === String(id_monthi));
+    if (!allowed) {
+      const next = new URLSearchParams(searchParams);
+      next.delete("id_monthi");
+      setSearchParams(next, { replace: true });
+      setCauhoiList([]);
+    }
+  }, [monthiList, id_monthi]);
+
+  useEffect(() => {
     if (id_monthi) {
       const getCauhois = async () => {
         try {
@@ -166,7 +180,11 @@ const Chuyende = () => {
   }, [id_monthi]);
 
   const handleChangeMonthi = (event) => {
-    setIdMonthi(event.target.value);
+    const next = new URLSearchParams(searchParams);
+    const value = event.target.value;
+    if (value && value !== " ") next.set("id_monthi", value);
+    else next.delete("id_monthi");
+    setSearchParams(next, { replace: true });
   };
 
   const [openDialogAddCauhoi, setOpenDialogAddCauhoi] = useState(false);
@@ -265,8 +283,27 @@ const Chuyende = () => {
     }
   };
 
-  const handleConfirmDelete = async () => {
+  const handleToggleHoctap = async (row, checked) => {
+    try {
+      const res = await monthiApi.editChuyende({
+        monthi: id_monthi,
+        id_edit: row._id,
+        title: row.title,
+        link_test: row.link_test,
+        hien_thi_hoctap: checked,
+      });
+      setCauhoiList(res.data.items);
+    } catch (error) {
+      enqueueSnackbar(error.message, {
+        anchorOrigin: { vertical: "bottom", horizontal: "right" },
+        variant: "error",
+      });
+    }
+  };
 
+  const handleConfirmDelete = async () => {
+    if (isDeleting || !openDialogDelete.id_Delete) return;
+    setIsDeleting(true);
     try {
       let res = await monthiApi.deleteChuyende(id_monthi, openDialogDelete.id_Delete);
       setCauhoiList(res.data.items)
@@ -284,20 +321,6 @@ const Chuyende = () => {
         variant: "success",
       });
     } catch (error) {
-      console.log(error)
-      // if (
-      //   error.message ===
-      //   "Token không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại"
-      // ) {
-      //   navigate("/login");
-      //   enqueueSnackbar(error.message, {
-      //     anchorOrigin: {
-      //       vertical: "bottom",
-      //       horizontal: "right",
-      //     },
-      //     variant: "error",
-      //   });
-      // }
       enqueueSnackbar(error.message, {
         anchorOrigin: {
           vertical: "bottom",
@@ -305,6 +328,8 @@ const Chuyende = () => {
         },
         variant: "error",
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -333,12 +358,19 @@ const Chuyende = () => {
         </div>
 
 
-        <div className="text-end mb-4 mt-8">
-          <Button variant="contained" onClick={handleOpenDialogAddCauhoi}>
-            <AddIcon />
-            Thêm mới chuyên đề
-          </Button>
-        </div>
+        {roles && roles.includes("thêm chuyên đề") && id_monthi && (
+          <div className="text-end mb-4 mt-8">
+            <Button variant="contained" onClick={handleOpenDialogAddCauhoi}>
+              <AddIcon />
+              Thêm mới chuyên đề
+            </Button>
+          </div>
+        )}
+        {monthiList.length === 0 && (
+          <p className="text-sm text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 mb-3">
+            Tài khoản chưa được phân quyền kiến thức đánh giá nào nên không quản lý được chuyên đề. Liên hệ quản trị viên (mục Phân quyền QL kiến thức đánh giá).
+          </p>
+        )}
         {openModalLoading && <ModalLoading open={openModalLoading} />}
       </div>
 
@@ -349,6 +381,7 @@ const Chuyende = () => {
           item={openDialogEdit.item}
           onClickOpenDialogDelete={handleOpenDialogDelete}
           onClickOpenDialogEdit={handleOpenDialogEdit}
+          onToggleHoctap={handleToggleHoctap}
         />
       </div>
 
@@ -370,6 +403,7 @@ const Chuyende = () => {
         onCloseDialogDelete={handleCloseDialogDelete}
         onConfirmDelete={handleConfirmDelete}
         onCancelDelete={handleCancelDelete}
+        loading={isDeleting}
       />
     </div>
   );

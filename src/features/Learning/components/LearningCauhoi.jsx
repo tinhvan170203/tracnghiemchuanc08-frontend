@@ -5,8 +5,6 @@ import {
     CheckCircle2,
     ChevronLeft,
     ChevronRight,
-    Eye,
-    EyeOff,
     RotateCcw,
     Sparkles,
     Award,
@@ -32,11 +30,12 @@ export default function LearningCauhoi() {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [loading, setLoading] = useState(true);
     const [finished, setFinished] = useState(false);
-    const [showAnswer, setShowAnswer] = useState(false);
+    const [lockedMsg, setLockedMsg] = useState("");
 
     useEffect(() => {
         async function load() {
             setLoading(true);
+            setLockedMsg("");
             try {
                 const res = await learningApi.getCauhoisOfChuyende(chuyendeId);
                 const data = res.data;
@@ -47,7 +46,12 @@ export default function LearningCauhoi() {
                 setFinished(isDoneAll(chuyendeId, data.cauhois || []));
                 setCurrentIndex(getResumeIndex(chuyendeId, data.cauhois || []));
             } catch (error) {
-                console.error("Lỗi khi tải câu hỏi:", error);
+                if (error.code === "HOC_CLOSED") {
+                    setLockedMsg(error.message);
+                    setCauhois([]);
+                } else {
+                    console.error("Lỗi khi tải câu hỏi:", error);
+                }
             } finally {
                 setLoading(false);
             }
@@ -62,7 +66,6 @@ export default function LearningCauhoi() {
 
     const handleNext = () => {
         if (current) markAsLearned(chuyendeId, current._id);
-        setShowAnswer(false);
 
         if (currentIndex === cauhois.length - 1) {
             setFinished(true);
@@ -72,7 +75,6 @@ export default function LearningCauhoi() {
     };
 
     const handlePrev = () => {
-        setShowAnswer(false);
         setCurrentIndex((i) => Math.max(i - 1, 0));
     };
 
@@ -80,7 +82,6 @@ export default function LearningCauhoi() {
         resetProgress(chuyendeId);
         setCurrentIndex(0);
         setFinished(false);
-        setShowAnswer(false);
     };
 
     // 1. Màn hình Loading
@@ -92,6 +93,15 @@ export default function LearningCauhoi() {
                     <BookOpen className="h-6 w-6 text-orange-500 absolute" />
                 </div>
                 <p className="mt-4 text-slate-600 font-medium animate-pulse">Đang tải câu hỏi...</p>
+            </div>
+        );
+    }
+
+    if (lockedMsg) {
+        return (
+            <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center">
+                <h3 className="text-xl font-bold text-gray-800 mb-2">Tạm đóng học câu hỏi</h3>
+                <p className="text-gray-500 max-w-sm">{lockedMsg}</p>
             </div>
         );
     }
@@ -148,7 +158,7 @@ export default function LearningCauhoi() {
                             {HEADER_1}
                         </h3>
                         <h3 className="text-center text-[11px] md:text-lg md:text-white uppercase text-[#ffee00] drop-shadow [text-shadow:_1px_1px_4px_black] font-bold">
-                           {HEADER_2}
+                            {HEADER_2}
                         </h3>
                     </div>
                 </div>
@@ -213,7 +223,7 @@ export default function LearningCauhoi() {
                         {HEADER_1}
                     </h3>
                     <h3 className="text-center text-[11px] md:text-lg md:text-white uppercase text-[#ffee00] drop-shadow [text-shadow:_1px_1px_4px_black] font-bold">
-                       {HEADER_2}
+                        {HEADER_2}
                     </h3>
                 </div>
             </div>
@@ -262,32 +272,14 @@ export default function LearningCauhoi() {
                         )}
                     </div>
 
-                    {/* Các nội dung câu trả lời, câu nào là đáp án thì xanh lè */}
-                 {["a", "b", "c", "d", "e"]
-  .filter((i) => current[`option_${i}`] !== "")
-  .map((character, index) => (
-    <p
-      key={character}
-      className={
-        `option_${character}` === current.answer
-          ? "text-[13px] font-semibold text-emerald-800 pl-6"
-          : "text-[13px] font-semibold pl-6"
-      }
-    >
-      {String.fromCharCode(65 + index)}. {current[`option_${character}`]}
-    </p>
-  ))}
-
-                    {/* Khung hiển thị đáp án */}
-
-                    {/* <div className="mt-6 rounded-2xl bg-emerald-50 border border-emerald-200 p-4 text-emerald-900 animate-fadeIn">
-                        <div className="flex items-center gap-2 mb-1 text-emerald-700  text-xs uppercase tracking-wider">
-                            <CheckCircle2 className="h-4 w-4" /> Nội dung câu trả lời:
+                    <div className="mt-6 rounded-2xl bg-emerald-50 border border-emerald-200 p-4 text-emerald-900">
+                        <div className="flex items-center gap-2 mb-1 text-emerald-700 text-xs uppercase tracking-wider font-semibold">
+                            <CheckCircle2 className="h-4 w-4" /> Đáp án
                         </div>
-                        <p className="text-[14px] font-semibold text-emerald-800 pl-6">
-                            {current?.answerText}
+                        <p className="text-[14px] font-semibold text-emerald-800 pl-1 sm:pl-6">
+                            {current?.answerText || "Chưa có nội dung đáp án"}
                         </p>
-                    </div> */}
+                    </div>
 
 
                 </div>

@@ -17,12 +17,21 @@ import Select from "@mui/material/Select";
 import { InputField } from "../../../components/form-control/InputField";
 import { Button, Paper } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import ModalLoading from "../../../components/ModalLoading";
 
 import DashboardIcon from "@mui/icons-material/Dashboard";
 // import DialogAddCauhoi from "./../components/DialogAddCauhoi";
 import monthiApi from "./../../../api/monthiApi";
+import {
+  downloadBlobFile,
+  getBlobErrorMessage,
+  parseExportResponse,
+  waitForExportJob,
+} from "../../../utils/excelDownload";
 import CustomPaginationActionsTable from "../components/CustomPaginationActionsTable";
+import ExportJobProgressDialog from "../components/ExportJobProgressDialog";
+import CreatorAccountAutocomplete from "../../../components/CreatorAccountAutocomplete";
 // import DialogDelete from "./../../../components/DialogDelete";
 
 // import DialogEditCauhoi from "./../components/DialogEditCauhoi";
@@ -47,15 +56,26 @@ const ManageCuocthi = () => {
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
   let [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const [openModalLoading, setOpenModalLoading] = useState(false);
   const [monthiList, setMonthiList] = useState([]);
-  const [id_monthi, setIdMonthi] = useState(null);
+  const id_monthi = searchParams.get("id_monthi") || null;
   const [chuyendeList, setChuyendeList] = useState([]);
   const [text, setText] = useState('');
   const [tungay, setTungay] = useState("");
   const [denngay, setDenngay] = useState("");
   const [xeploai, setXeploai] = useState("");
   const [exportingId, setExportingId] = useState(null);
+  const [exportingAll, setExportingAll] = useState(false);
+  const [isContestSuperAdmin, setIsContestSuperAdmin] = useState(false);
+  const [creatorOptions, setCreatorOptions] = useState([]);
+  const [creatorIds, setCreatorIds] = useState(
+    () => searchParams.get("creatorIds") || ""
+  );
+  const [exportJobOpen, setExportJobOpen] = useState(false);
+  const [exportJob, setExportJob] = useState(null);
+  const [exportJobError, setExportJobError] = useState("");
+  const [exportJobDownloading, setExportJobDownloading] = useState(false);
   const [openDialogEdit, setOpenDialogEdit] = useState({
     status: false,
     item: null,
@@ -117,7 +137,16 @@ const ManageCuocthi = () => {
     const getMonthiOfUser = async () => {
       try {
         let res = await monthiApi.getMonthiOfUser();
-        setMonthiList(res.data.quantrinhommonthi);
+        setMonthiList(res.data.quantrinhommonthi || []);
+        setIsContestSuperAdmin(!!res.data.isContestSuperAdmin);
+        if (res.data.isContestSuperAdmin) {
+          const scope = await monthiApi.getContestScopeOptions();
+          setCreatorOptions(scope.data.creators || []);
+          setIsContestSuperAdmin(!!scope.data.isContestSuperAdmin);
+          if (scope.data.monthiList?.length) {
+            setMonthiList(scope.data.monthiList);
+          }
+        }
       } catch (error) {
         if (
           error.message ===
@@ -150,13 +179,18 @@ const ManageCuocthi = () => {
       const getCuocthis = async () => {
         try {
           setOpenModalLoading(true);
-          let res = await monthiApi.getCuocthis({ ...queryParams, id_monthi });
+          let res = await monthiApi.getCuocthis({
+            ...queryParams,
+            id_monthi,
+            creatorIds: isContestSuperAdmin ? creatorIds : undefined,
+          });
           let res1 = await monthiApi.getChuyendes({ id_monthi });
           setChuyendeList(res1.data.map(i => ({ label: i.title, value: i._id })))
           setList(res.data);
           setListBase(res.data)
           setOpenModalLoading(false);
         } catch (error) {
+          setOpenModalLoading(false);
           if (
             error.message ===
             "Token không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại"
@@ -182,7 +216,7 @@ const ManageCuocthi = () => {
 
       getCuocthis();
     }
-  }, [id_monthi, queryParams]);
+  }, [id_monthi, queryParams, creatorIds, isContestSuperAdmin]);
 
   // handle submit search
   const handleFormSearchSubmit = async (values) => {
@@ -204,6 +238,67 @@ const ManageCuocthi = () => {
     setOpenDialogAddCauhoi(true);
   };
 
+  const runExportJobFlow = async (jobSeed) => {
+    const jobId = jobSeed?.jobId || jobSeed?._id;
+    if (!jobId) throw new Error("Thiếu mã job xuất");
+    setExportJobError("");
+    setExportJob(jobSeed);
+    setExportJobOpen(true);
+    const finalJob = await waitForExportJob(
+      (id) => monthiApi.getKetquaExportJob(id),
+      jobId,
+      { onProgress: setExportJob }
+    );
+    setExportJob(finalJob);
+    try {
+      const res = await monthiApi.downloadKetquaExportJob(jobId);
+      const data = res.data;
+      if (data instanceof Blob && data.type?.includes("application/json")) {
+        const text = await data.text();
+        const parsed = JSON.parse(text);
+        throw new Error(parsed.message || "Không tải được file");
+      }
+      downloadBlobFile(
+        data,
+        finalJob?.fileName || "KetQuaThi.zip",
+        "application/zip"
+      );
+    } catch (error) {
+      const message = await getBlobErrorMessage(error, "Không tải được file");
+      setExportJobError(message);
+    }
+    return finalJob;
+  };
+
+  const handleDownloadExportJob = async () => {
+    const jobId = exportJob?.jobId || exportJob?._id;
+    if (!jobId) return;
+    setExportJobDownloading(true);
+    try {
+      const res = await monthiApi.downloadKetquaExportJob(jobId);
+      const data = res.data;
+      if (data instanceof Blob && data.type?.includes("application/json")) {
+        const text = await data.text();
+        const parsed = JSON.parse(text);
+        throw new Error(parsed.message || "Không tải được file");
+      }
+      downloadBlobFile(
+        data,
+        exportJob?.fileName || "KetQuaThi.zip",
+        "application/zip"
+      );
+    } catch (error) {
+      const message = await getBlobErrorMessage(error, "Không tải được file");
+      setExportJobError(message);
+      enqueueSnackbar(message, {
+        anchorOrigin: { vertical: "bottom", horizontal: "right" },
+        variant: "error",
+      });
+    } finally {
+      setExportJobDownloading(false);
+    }
+  };
+
   const handleExportExcel = async (row) => {
     if (!row?._id) return;
     setExportingId(row._id);
@@ -213,29 +308,23 @@ const ManageCuocthi = () => {
         denngay,
         xeploai,
       });
-      const contentType = res.headers?.["content-type"] || "";
-      if (contentType.includes("application/json")) {
-        const textRes = await res.data.text();
-        const parsed = JSON.parse(textRes);
-        throw new Error(parsed.message || "Không xuất được file Excel");
+      const parsed = await parseExportResponse(res);
+      if (parsed.type === "job") {
+        await runExportJobFlow(parsed.job);
+        return;
       }
-      const blob = new Blob([res.data], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
       const safe =
         String(row.tencuocthi || "export")
           .replace(/[^\w\-]+/g, "_")
           .slice(0, 60) || "export";
-      a.download = `KetQuaThi_${safe}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
+      downloadBlobFile(
+        parsed.data,
+        `KetQuaThi_${safe}.xlsx`,
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
     } catch (error) {
-      enqueueSnackbar(error?.message || "Không xuất được file Excel", {
+      const message = await getBlobErrorMessage(error);
+      enqueueSnackbar(message, {
         anchorOrigin: { vertical: "bottom", horizontal: "right" },
         variant: "error",
       });
@@ -244,8 +333,42 @@ const ManageCuocthi = () => {
     }
   };
 
+  const handleExportExcelAll = async () => {
+    const ids = list.map((item) => item._id).filter(Boolean);
+    if (!ids.length) {
+      enqueueSnackbar("Không có cuộc thi để xuất Excel", {
+        anchorOrigin: { vertical: "bottom", horizontal: "right" },
+        variant: "warning",
+      });
+      return;
+    }
+    setExportingAll(true);
+    try {
+      const res = await monthiApi.createKetquaExportJob({
+        type: "ketqua-many",
+        ids,
+        tungay,
+        denngay,
+        xeploai,
+      });
+      await runExportJobFlow(res.data);
+    } catch (error) {
+      const message = await getBlobErrorMessage(error);
+      enqueueSnackbar(message, {
+        anchorOrigin: { vertical: "bottom", horizontal: "right" },
+        variant: "error",
+      });
+    } finally {
+      setExportingAll(false);
+    }
+  };
+
   const handleChangeMonthi = (event) => {
-    setIdMonthi(event.target.value);
+    const next = new URLSearchParams(searchParams);
+    const value = event.target.value;
+    if (value && value !== " ") next.set("id_monthi", value);
+    else next.delete("id_monthi");
+    setSearchParams(next, { replace: true });
   };
 
   const handleSubmitAdd = async (values) => {
@@ -529,8 +652,29 @@ const ManageCuocthi = () => {
         {openModalLoading && <ModalLoading open={openModalLoading} />}
       </div>
 
-      <div className="mb-4 flex flex-col md:flex-row md:items-end gap-3 flex-wrap">
+        <div className="mb-4 flex flex-col md:flex-row md:items-end gap-3 flex-wrap">
         <input type="text" onChange={(e) => setText(e.target.value)} placeholder="Tìm kiếm cuộc thi" className="outline-none border rounded-sm border-slate-400 py-2 px-4" />
+        {isContestSuperAdmin && (
+          <div className="flex items-center gap-2 min-w-[260px] max-w-[320px]">
+            <label className="text-[12px] font-semibold whitespace-nowrap">Tài khoản tạo</label>
+            <div className="flex-1">
+              <CreatorAccountAutocomplete
+                options={creatorOptions}
+                value={creatorIds}
+                size="small"
+                variant="compact"
+                placeholder="Tất cả — gõ tìm…"
+                onChange={(value) => {
+                  setCreatorIds(value);
+                  const next = new URLSearchParams(searchParams);
+                  if (value) next.set("creatorIds", value);
+                  else next.delete("creatorIds");
+                  setSearchParams(next, { replace: true });
+                }}
+              />
+            </div>
+          </div>
+        )}
         <div className="flex items-center justify-between space-x-2">
           <label className="text-[12px] font-semibold whitespace-nowrap">Từ ngày</label>
           <input type="date" value={tungay} onChange={(e) => setTungay(e.target.value)} className="outline-none border text-[12px] p-1 bg-gray-100" />
@@ -550,6 +694,18 @@ const ManageCuocthi = () => {
             <option value="Không đạt">Không đạt</option>
           </select>
         </div>
+        {roles && roles.includes("xem cuộc thi") && (
+          <Button
+            variant="contained"
+            color="success"
+            size="small"
+            startIcon={<FileDownloadIcon />}
+            disabled={exportingAll || !list.length}
+            onClick={handleExportExcelAll}
+          >
+            {exportingAll ? "Đang xuất..." : "Xuất Excel tất cả"}
+          </Button>
+        )}
       </div>
 
       <CustomPaginationActionsTable
@@ -560,6 +716,29 @@ const ManageCuocthi = () => {
         onHandleChangeStatusCuocthi={handleChangeStatusCuocthi}
         onExportExcel={handleExportExcel}
         exportingId={exportingId}
+        isContestSuperAdmin={isContestSuperAdmin}
+        creatorOptions={creatorOptions}
+        onAssignOwner={async (row, userId) => {
+          if (!id_monthi || !userId) return;
+          try {
+            const res = await monthiApi.assignCuocthiOwner(id_monthi, row._id, {
+              userId,
+              tencuocthi: queryParams.tencuocthi || "",
+              creatorIds: isContestSuperAdmin ? creatorIds : undefined,
+            });
+            setList(res.data.items);
+            setListBase(res.data.items);
+            enqueueSnackbar(res.data.message || "Đã gán chủ sở hữu", {
+              variant: "success",
+              anchorOrigin: { vertical: "bottom", horizontal: "right" },
+            });
+          } catch (error) {
+            enqueueSnackbar(error.message || "Không gán được chủ sở hữu", {
+              variant: "error",
+              anchorOrigin: { vertical: "bottom", horizontal: "right" },
+            });
+          }
+        }}
       />
 
       <Suspense fallback={<ModalLoading open={true} />}>
@@ -585,6 +764,18 @@ const ManageCuocthi = () => {
           onCancelDelete={handleCancelDelete}
         />
       </Suspense>
+
+      <ExportJobProgressDialog
+        open={exportJobOpen}
+        job={exportJob}
+        error={exportJobError}
+        downloading={exportJobDownloading}
+        onClose={() => {
+          setExportJobOpen(false);
+          setExportJobError("");
+        }}
+        onDownload={handleDownloadExportJob}
+      />
     </div>
   );
 };

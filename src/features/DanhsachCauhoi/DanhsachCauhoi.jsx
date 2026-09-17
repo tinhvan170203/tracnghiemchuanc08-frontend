@@ -39,11 +39,11 @@ const DanhsachCauhoi = () => {
 
   const roles = useSelector((state) => (state.authReducer.roles_x01));
   const [monthiList, setMonthiList] = useState([]);
-  const [id_monthi, setIdMonthi] = useState(null);
   const [cauhoiList, setCauhoiList] = useState([])
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
   let [searchParams, setSearchParams] = useSearchParams();
+  const id_monthi = searchParams.get("id_monthi") || null;
   const [openModalLoading, setOpenModalLoading] = useState(false);
   const [donviList, setDonviList] = useState([]);
   const [chuyendeList, setChuyendeList] = useState([]);
@@ -75,6 +75,7 @@ const DanhsachCauhoi = () => {
     status: false,
     id_Delete: null,
   });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   //open dialog delete
   const handleOpenDialogDelete = (id) => {
@@ -85,6 +86,7 @@ const DanhsachCauhoi = () => {
   };
 
   const handleCloseDialogDelete = () => {
+    if (isDeleting) return;
     setOpenDialogDelete({
       ...openDialogDelete,
       status: false,
@@ -92,6 +94,7 @@ const DanhsachCauhoi = () => {
   };
 
   const handleCancelDelete = () => {
+    if (isDeleting) return;
     setOpenDialogDelete({
       ...openDialogDelete,
       status: false,
@@ -180,7 +183,11 @@ const DanhsachCauhoi = () => {
   }, [id_monthi, queryParams]);
 
   const handleChangeMonthi = (event) => {
-    setIdMonthi(event.target.value)
+    const next = new URLSearchParams(searchParams);
+    const value = event.target.value;
+    if (value && value !== " ") next.set("id_monthi", value);
+    else next.delete("id_monthi");
+    setSearchParams(next, { replace: true });
   };
 
   // handle submit search
@@ -257,6 +264,31 @@ const DanhsachCauhoi = () => {
     }
   };
 
+  const handleToggleActive = async (row, active) => {
+    try {
+      let res = await cauhoiApi.setActive(row._id, {
+        active,
+        monthi: id_monthi,
+        queryParams,
+      });
+      setCauhoiList(res.data.items);
+    } catch (error) {
+      if (
+        error.message ===
+        "Token không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại"
+      ) {
+        navigate("/login");
+      }
+      enqueueSnackbar(error.message, {
+        anchorOrigin: {
+          vertical: "bottom",
+          horizontal: "right",
+        },
+        variant: "error",
+      });
+    }
+  };
+
   //handle submit edit
   const handleSubmitEdit = async (values) => {
     values.append("monthi", id_monthi);
@@ -299,7 +331,8 @@ const DanhsachCauhoi = () => {
   };
 
   const handleConfirmDelete = async () => {
-
+    if (isDeleting || !openDialogDelete.id_Delete) return;
+    setIsDeleting(true);
     try {
       let res = await cauhoiApi.deleteCauhoi(openDialogDelete.id_Delete, { ...queryParams, monthi: id_monthi });
       setCauhoiList(res.data.items)
@@ -337,6 +370,8 @@ const DanhsachCauhoi = () => {
         },
         variant: "error",
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -430,6 +465,7 @@ const DanhsachCauhoi = () => {
           item={openDialogEdit.item}
           onClickOpenDialogDelete={handleOpenDialogDelete}
           onClickOpenDialogEdit={handleOpenDialogEdit}
+          onToggleActive={handleToggleActive}
         />
       </div>
 
@@ -453,6 +489,7 @@ const DanhsachCauhoi = () => {
         onCloseDialogDelete={handleCloseDialogDelete}
         onConfirmDelete={handleConfirmDelete}
         onCancelDelete={handleCancelDelete}
+        loading={isDeleting}
       />
     </div>
   );

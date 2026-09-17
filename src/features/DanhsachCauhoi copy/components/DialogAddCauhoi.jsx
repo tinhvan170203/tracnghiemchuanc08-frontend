@@ -6,7 +6,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import Slide from "@mui/material/Slide";
 import AutoAwesomeMotionIcon from "@mui/icons-material/AutoAwesomeMotion";
 import CancelIcon from "@mui/icons-material/Cancel";
-import { Box, Button, Grid, IconButton, LinearProgress, styled, Typography } from "@mui/material";
+import { Box, Button, Checkbox, FormControlLabel, Grid, IconButton, LinearProgress, styled, Typography } from "@mui/material";
 import { InputField } from "../../../components/form-control/InputField";
 import * as yup from "yup";
 import { useForm } from "react-hook-form";
@@ -39,7 +39,8 @@ export default function DialogAddCauhoi({
   const form = useForm({
     defaultValues: {
       title: "",
-      link_test: ""
+      link_test: "",
+      hien_thi_hoctap: false,
     },
     resolver: yupResolver(schema),
   });
@@ -113,6 +114,17 @@ export default function DialogAddCauhoi({
                     label="Id cuộc thi để tự kiểm tra đánh giá kiến thức tổng hợp"
                     type="text"
                     disabled={false}
+                  />
+                </Grid>
+                <Grid item xs={12} md={12} lg={12}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={!!form.watch("hien_thi_hoctap")}
+                        onChange={(e) => form.setValue("hien_thi_hoctap", e.target.checked)}
+                      />
+                    }
+                    label="Hiện trên trang tự học"
                   />
                 </Grid>
               </Grid>

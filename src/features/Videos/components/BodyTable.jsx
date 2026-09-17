@@ -8,14 +8,15 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
 import { useSelector } from "react-redux";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import { IconButton } from "@mui/material";
+import { IconButton, Switch } from "@mui/material";
 
 
 const BodyTable = ({
   row,
   onClickOpenDialogEdit,
   onClickOpenDialogDelete,
-  onViewPlayer
+  onViewPlayer,
+  onToggleActive,
 }) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
@@ -60,6 +61,20 @@ const BodyTable = ({
       >
         {row.totalView} 
       </TableCell>
+      <TableCell
+        className="border-r border-slate-300"
+        align="center"
+      >
+        {roles && roles.includes("sửa video tuyên truyền") ? (
+          <Switch
+            checked={row.active !== false}
+            onChange={(e) => onToggleActive(row, e.target.checked)}
+            color="success"
+          />
+        ) : (
+          row.active !== false ? "Có" : "Không"
+        )}
+      </TableCell>
      
       <TableCell
         align="right"
@@ -67,6 +82,7 @@ const BodyTable = ({
         style={{width: "180px",}}
       >
      
+          {roles && roles.includes("sửa video tuyên truyền") && (
           <Button
             variant="contained"
             color="success"
@@ -75,7 +91,9 @@ const BodyTable = ({
           >
             <EditIcon style={{ fontSize: "20px" }} />
           </Button>
+          )}
 
+          {roles && roles.includes("xóa video tuyên truyền") && (
           <Button
             variant="contained"
             color="error"
@@ -85,6 +103,7 @@ const BodyTable = ({
           >
             <DeleteOutlineIcon style={{ fontSize: "20px" }} />
           </Button>
+          )}
       </TableCell>
     </TableRow>
   );

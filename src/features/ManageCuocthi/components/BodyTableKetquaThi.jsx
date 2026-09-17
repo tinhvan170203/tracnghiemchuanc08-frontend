@@ -49,7 +49,7 @@ const BodyTableKetquaThi = ({ row, index, page, rowsPerPage, onClickOpenDialogEd
       <TableCell className={cellClass} align="left">{tt.loaixe}</TableCell>
       <TableCell className={cellClass} align="left">{tt.hang_gplx}</TableCell>
       {/* <TableCell className={cellClass} align="left">{tt.nghenghiep}</TableCell> */}
-      <TableCell className={cellClass} align="left">{tt.phone}</TableCell>
+      <TableCell className={cellClass} align="left">{tt.phone} - {tt.hokhau}</TableCell>
       <TableCell className={cellClass} align="left">{tt.donvi}</TableCell>
       {/* <TableCell className={cellClass} align="left">{tt.hokhau}</TableCell> */}
       <TableCell className={cellClass} align="left">{row?.socaudung}</TableCell>

@@ -1,4 +1,6 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { writeSearchParams } from '../../utils/searchParams';
 import { 
   Trophy, 
   Users, 
@@ -11,6 +13,9 @@ import c08Api from '../../api/c08Api';
 // import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import ModalLoading from '../../components/ModalLoading';
+import DemographicFilters, {
+  validateDemographicAge,
+} from '../../components/DemographicFilters';
 const exportExcel = async (listSuccess) => {
    const XLSX = await import('xlsx');
   const dataExport = listSuccess.map((item, index) => ({
@@ -296,10 +301,24 @@ const StackedRowUnit = ({ name, id, data }) => {
 };
 
 const ThongkeDiaphuong = () => {
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const qFromDate = searchParams.get("fromDate") || "";
+  const qToDate = searchParams.get("toDate") || "";
+  const qIdsStr = searchParams.get("ids") || "";
+  const qIds = qIdsStr.split(",").filter(Boolean);
+  const qAgeFrom = searchParams.get("ageFrom") || "";
+  const qAgeTo = searchParams.get("ageTo") || "";
+  const qGioitinh = searchParams.get("gioitinh") || "";
+  const qLoaixe = searchParams.get("loaixe") || "";
+  const daThongke = searchParams.get("run") === "1";
+  const [fromDate, setFromDate] = useState(qFromDate);
+  const [toDate, setToDate] = useState(qToDate);
+  const [selectedIds, setSelectedIds] = useState(qIds);
+  const [ageFrom, setAgeFrom] = useState(qAgeFrom);
+  const [ageTo, setAgeTo] = useState(qAgeTo);
+  const [gioitinh, setGioitinh] = useState(qGioitinh);
+  const [loaixe, setLoaixe] = useState(qLoaixe);
   const [list, setList] = useState([]);
-  const [selectedIds, setSelectedIds] = useState([]);
   const [listSuccess, setListSuccess] = useState([]);
   const [listError, setListError] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -316,28 +335,109 @@ const ThongkeDiaphuong = () => {
     fetchDiaphuongs();
   }, []);
 
- const handleThongke = async () => {
+  useEffect(() => {
+    setFromDate(qFromDate);
+    setToDate(qToDate);
+    setSelectedIds(qIdsStr.split(",").filter(Boolean));
+    setAgeFrom(qAgeFrom);
+    setAgeTo(qAgeTo);
+    setGioitinh(qGioitinh);
+    setLoaixe(qLoaixe);
+  }, [qFromDate, qToDate, qIdsStr, qAgeFrom, qAgeTo, qGioitinh, qLoaixe]);
+
+ const handleThongke = useCallback(async (filters) => {
+  if (!filters.fromDate || !filters.toDate) {
+    alert("Vui lòng chọn đầy đủ từ ngày và đến ngày");
+    return;
+  }
   try {
     setIsLoading(true);
 
     const res = await c08Api.thongkeToanquoc({
-      fromDate,
-      toDate,
-      list: selectedIds,
+      fromDate: filters.fromDate,
+      toDate: filters.toDate,
+      list: filters.list,
+      ageFrom: filters.ageFrom,
+      ageTo: filters.ageTo,
+      gioitinh: filters.gioitinh,
+      loaixe: filters.loaixe,
     });
 
     setListSuccess(res.data?.listSuccess || []);
     setListError(res.data?.listError || []);
   } catch (error) {
     console.error(error);
+    alert(error.message || "Có lỗi xảy ra khi thống kê toàn quốc");
   } finally {
     setIsLoading(false);
   }
-};
+}, []);
+
+  useEffect(() => {
+    if (!daThongke) return;
+    if (!qFromDate || !qToDate) return;
+    handleThongke({
+      fromDate: qFromDate,
+      toDate: qToDate,
+      list: qIdsStr.split(",").filter(Boolean),
+      ageFrom: qAgeFrom,
+      ageTo: qAgeTo,
+      gioitinh: qGioitinh,
+      loaixe: qLoaixe,
+    });
+  }, [daThongke, qFromDate, qToDate, qIdsStr, qAgeFrom, qAgeTo, qGioitinh, qLoaixe, handleThongke]);
+
+  const handleDemographicChange = (field, value) => {
+    const setters = {
+      ageFrom: setAgeFrom,
+      ageTo: setAgeTo,
+      gioitinh: setGioitinh,
+      loaixe: setLoaixe,
+    };
+    setters[field]?.(value);
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    if (!fromDate || !toDate) {
+      alert("Vui lòng chọn đầy đủ từ ngày và đến ngày");
+      return;
+    }
+    const ageError = validateDemographicAge(ageFrom, ageTo);
+    if (ageError) {
+      alert(ageError);
+      return;
+    }
+    writeSearchParams(searchParams, setSearchParams, {
+      fromDate,
+      toDate,
+      ids: selectedIds.join(","),
+      ageFrom,
+      ageTo,
+      gioitinh,
+      loaixe,
+      run: "1",
+    });
+  };
+
+  const handleClearDemographics = () => {
+    setAgeFrom("");
+    setAgeTo("");
+    setGioitinh("");
+    setLoaixe("");
+    if (daThongke) {
+      writeSearchParams(searchParams, setSearchParams, {
+        ageFrom: "",
+        ageTo: "",
+        gioitinh: "",
+        loaixe: "",
+      });
+    }
+  };
 
   const handleChangeAll = (e) => {
     if (e.target.checked) {
-      setSelectedIds(list.map(item => item._id));
+      setSelectedIds(list.map((item) => item._id));
     } else {
       setSelectedIds([]);
     }
@@ -345,8 +445,8 @@ const ThongkeDiaphuong = () => {
 
   const hanleChangeCheckBox = (e) => {
     const id = e.target.value;
-    setSelectedIds(prev => 
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
   };
 
@@ -451,7 +551,7 @@ const ThongkeDiaphuong = () => {
 
         {/* Bộ lọc ngày tháng */}
         <div className="bg-white py-4 px-6 rounded-2xl border border-slate-200 shadow-sm mt-4">
-          <form className="flex flex-wrap items-end gap-6" onSubmit={(e) => { e.preventDefault(); handleThongke(); }}>
+          <form className="flex flex-wrap items-end gap-6" onSubmit={handleSubmit}>
             <div className="flex-1 min-w-[200px]">
               <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Từ ngày</label>
               <input
@@ -469,6 +569,16 @@ const ThongkeDiaphuong = () => {
             <button type="submit" className="px-8 py-2 bg-[#ab0000] text-white font-bold rounded-xl hover:bg-[#8e0000] shadow-lg shadow-red-100 flex items-center gap-2 transition-all active:scale-[0.98]">
               Thống kê dữ liệu
             </button>
+            <DemographicFilters
+              idPrefix="thongke-toanquoc"
+              ageFrom={ageFrom}
+              ageTo={ageTo}
+              gioitinh={gioitinh}
+              loaixe={loaixe}
+              onChange={handleDemographicChange}
+              onClear={handleClearDemographics}
+              className="basis-full"
+            />
           </form>
         </div>
       </div>
@@ -600,9 +710,9 @@ const ThongkeDiaphuong = () => {
             </div>
 
             {/* Chi tiết mã lỗi hệ thống */}
-            <div className="sm:text-right shrink-0">
-              <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-semibold text-red-700 border border-red-100 truncate" title={item.error}>
-                {item.error.includes("HTTP") ? `Lỗi mạng: ${item.error}` : "Sai cấu hình URL hoặc chưa chạy bản phần mềm của đơn vị"}
+            <div className="sm:text-right shrink-0 max-w-full sm:max-w-md">
+              <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-semibold text-red-700 border border-red-100 whitespace-normal break-words text-left sm:text-right" title={item.error}>
+                {item.error || "Không rõ lỗi"}
               </span>
             </div>
 

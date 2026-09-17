@@ -1,14 +1,17 @@
 import * as React from "react";
 import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
 import Slide from "@mui/material/Slide";
-import AutoAwesomeMotionIcon from "@mui/icons-material/AutoAwesomeMotion";
-import CancelIcon from "@mui/icons-material/Cancel";
-import { Box, Button, Grid, IconButton, LinearProgress, styled, Typography } from "@mui/material";
-import { forwardRef, useImperativeHandle, useRef } from 'react'
+import { Button } from "@mui/material";
+import FacebookIcon from "@mui/icons-material/Facebook";
+import { useRef, useState } from "react";
 import Giaychungnhan from "../../Giaychungnhan";
+import commonApi from "../../../api/commonApi";
+
+const FACEBOOK_PAGE_URL =
+  import.meta.env.VITE_FACEBOOK_PAGE_URL ||
+  "https://www.facebook.com/cuccanhsatgiaothong";
+
 function msToHMS(ms) {
   // Đảm bảo ms không âm
   if (ms < 0) ms = 0;
@@ -27,28 +30,54 @@ function msToHMS(ms) {
   seconds = seconds % 60;
 
   // Làm tròn giây và đảm bảo có 2 chữ số (ví dụ: 05)
-  const formattedSeconds = seconds.toFixed(0).padStart(2, '0');
-  const formattedMinutes = minutes.toString().padStart(2, '0');
+  const formattedSeconds = seconds.toFixed(0).padStart(2, "0");
+  const formattedMinutes = minutes.toString().padStart(2, "0");
 
   if (hours === 0) {
-    return `${formattedMinutes} : ${formattedSeconds}`
+    return `${formattedMinutes} : ${formattedSeconds}`;
   }
   // Định dạng đầy đủ: HH:MM:SS
-  const formattedHours = hours.toString().padStart(2, '0');
-  return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`
+  const formattedHours = hours.toString().padStart(2, "0");
+  return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
 }
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const CancelButton = styled(IconButton)({
-  position: "absolute",
-  right: "16px",
-  top: "4px"
-})
+function readJson(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
 
+function buildFanpagePayload() {
+  const thisinh =
+    readJson("thongtin_doituong") ||
+    readJson("thongtin_doituong_tuhoc") ||
+    {};
+  // loginTest lưu cuộc thi vào key "thongtinthisinh"
+  const cuocthiDoc = readJson("thongtinthisinh") || {};
 
+  return {
+    name: thisinh.name || "",
+    phone: thisinh.phone || "",
+    birthday: thisinh.birthday ?? "",
+    donvi: thisinh.donvi || "",
+    hokhau: thisinh.hokhau || "",
+    gioitinh: thisinh.gioitinh || "",
+    loaixe: thisinh.loaixe || "",
+    hang_gplx: thisinh.hang_gplx || "",
+    nghenghiep: thisinh.nghenghiep || "",
+    cuocthi: cuocthiDoc._id || null,
+    tencuocthi: cuocthiDoc.tencuocthi || "",
+    origin: typeof window !== "undefined" ? window.location.origin : "",
+    hostname: typeof window !== "undefined" ? window.location.hostname : "",
+  };
+}
 
 export default function DialogSuccessTest({
   open,
@@ -56,24 +85,45 @@ export default function DialogSuccessTest({
   result,
   onSubmit,
   onOpenPreviewMode,
-  handleSubmitOut
+  handleSubmitOut,
 }) {
-
   const handleFormSubmit = () => {
-    onSubmit()
+    onSubmit();
   };
 
   const refCon = useRef();
+  const [chungNhanLoading, setChungNhanLoading] = useState(false);
+
+  const runChungNhan = async (fn) => {
+    if (!refCon.current || !fn) return;
+    setChungNhanLoading(true);
+    try {
+      await fn();
+    } finally {
+      setChungNhanLoading(false);
+    }
+  };
 
   const saveGiaychungnhan = () => {
-    if (refCon.current && refCon.current.saveGiaychungnhan) {
-      refCon.current.saveGiaychungnhan();
+    runChungNhan(refCon.current?.saveGiaychungnhan);
+  };
+
+  const xemGiaychungnhan = () => {
+    runChungNhan(refCon.current?.xemGiaychungnhan);
+  };
+
+  const handleOpenFanpage = () => {
+    const payload = buildFanpagePayload();
+    if (payload.cuocthi) {
+      commonApi.logFanpageClick(payload).catch(() => {});
     }
-  }
+    window.open(FACEBOOK_PAGE_URL, "_blank", "noopener,noreferrer");
+  };
+
   return (
     <>
       <Dialog
-        // maxWidth="xs"
+        maxWidth="xl"
         fullWidth={true}
         disableEscapeKeyDown={true}
         onClose={(event, reason) => {
@@ -87,67 +137,97 @@ export default function DialogSuccessTest({
         keepMounted
         aria-describedby="alert-dialog-slide-description"
       >
-        <DialogContent>
-          <p className="text-center text-sm md:text-lg uppercase">Cảm ơn bạn đã tham gia hoàn thành bài thu hoạch!</p>
-          <img src="/thanks.png" alt="img" />
-          <p className="text-center text-sm md:text-lg text-green-700">Chúc mừng bạn đã hoàn thành bài thi với <span className="font-bold">{result.choicedTrue}/{result.allQuestion}</span> câu trả lời đúng trong khoảng thời gian {msToHMS(result.time)}
-            {/* , đạt
-          <span className="font-bold text-red-800"> {((result.choicedTrue)/(result.allQuestion)*(result.diem)).toFixed(2)} </span>điểm */}
+        <DialogContent sx={{ px: { xs: 2, md: 3 }, pb: 3 }}>
+          <p className="text-center text-sm md:text-lg uppercase font-semibold text-slate-800">
+            Cảm ơn bạn đã tham gia hoàn thành bài thu hoạch!
           </p>
-          <div>
-
-
+          <div className="flex items-center justify-center my-2">
+            <img src="/thanks.png" alt="img" className="md:w-[300px]" />
           </div>
-          <div className="md:flex-row md:items-center md:justify-center md:space-x-2 flex flex-col justify-center items-center">
-            <Button variant="contained" size="small" onClick={() => saveGiaychungnhan()}>Tải giấy chứng nhận</Button>
-            <div>
-              <Button
-                color="error"
-                variant="contained"
-                type="submit"
-                size="small"
-                style={{ margin: "4px auto" }}
-                onClick={handleSubmitOut}
-              >
+          <p className="text-center text-sm md:text-lg text-green-700 mb-4">
+            Chúc mừng bạn đã hoàn thành bài thi với{" "}
+            <span className="font-bold">
+              {result.choicedTrue}/{result.allQuestion}
+            </span>{" "}
+            câu trả lời đúng trong khoảng thời gian {msToHMS(result.time)}
+          </p>
 
-                <span>Thoát</span>
-              </Button>
-            </div>
-            <div>
+          <div className="rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 to-slate-50 px-3 py-3 mb-3">
+            <p className="text-center text-xs md:text-sm text-slate-600 mb-2">
+              Theo dõi fanpage để nhận thông tin tuyên truyền an toàn giao thông
+            </p>
+            <div className="flex justify-center">
               <Button
-                color="info"
                 variant="contained"
-                type="submit"
-                size="small"
-                style={{ margin: "4px auto" }}
-                onClick={handleFormSubmit}
+                size="medium"
+                startIcon={<FacebookIcon />}
+                onClick={handleOpenFanpage}
+                sx={{
+                  bgcolor: "#1877F2",
+                  "&:hover": { bgcolor: "#0d65d9" },
+                  textTransform: "none",
+                  fontWeight: 700,
+                  borderRadius: "12px",
+                  px: 2.5,
+                  boxShadow: "0 8px 20px rgba(24,119,242,0.28)",
+                }}
               >
-
-                <span>Làm lại bài thi</span>
-              </Button>
-            </div>
-            <div>
-              <Button
-                color="warning"
-                variant="contained"
-                type="submit"
-                size="small"
-                style={{ margin: "4px auto" }}
-                onClick={onOpenPreviewMode}
-              >
-
-                <span>Xem lại bài thi</span>
+                Theo dõi fanpage Cục CSGT
               </Button>
             </div>
           </div>
 
+          <div className="flex flex-wrap justify-center gap-2">
+            <Button
+              variant="outlined"
+              size="small"
+              disabled={chungNhanLoading}
+              onClick={() => xemGiaychungnhan()}
+              sx={{ borderRadius: "10px", textTransform: "none" }}
+            >
+              {chungNhanLoading ? "Đang tạo..." : "Xem giấy chứng nhận"}
+            </Button>
+            <Button
+              variant="contained"
+              size="small"
+              disabled={chungNhanLoading}
+              onClick={() => saveGiaychungnhan()}
+              sx={{ borderRadius: "10px", textTransform: "none" }}
+            >
+              Tải giấy chứng nhận
+            </Button>
+            <Button
+              color="info"
+              variant="contained"
+              size="small"
+              onClick={handleFormSubmit}
+              sx={{ borderRadius: "10px", textTransform: "none" }}
+            >
+              Làm lại bài thi
+            </Button>
+            <Button
+              color="warning"
+              variant="contained"
+              size="small"
+              onClick={onOpenPreviewMode}
+              sx={{ borderRadius: "10px", textTransform: "none" }}
+            >
+              Xem lại bài thi
+            </Button>
+            <Button
+              color="error"
+              variant="contained"
+              size="small"
+              onClick={handleSubmitOut}
+              sx={{ borderRadius: "10px", textTransform: "none" }}
+            >
+              Thoát
+            </Button>
+          </div>
         </DialogContent>
-
-        <div style={{ height: 0, overflow: 'hidden', position: 'absolute', zIndex: -1 }}>
-          <Giaychungnhan result={result} ref={refCon} />
-        </div>
       </Dialog>
+
+      <Giaychungnhan result={result} ref={refCon} />
     </>
   );
 }
-

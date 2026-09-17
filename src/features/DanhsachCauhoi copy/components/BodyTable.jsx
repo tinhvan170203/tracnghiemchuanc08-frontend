@@ -5,6 +5,7 @@ import TableRow from "@mui/material/TableRow";
 
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import { Switch } from "@mui/material";
 
 import { useSelector } from "react-redux";
 
@@ -30,6 +31,7 @@ const BodyTable = ({
   row,
   onClickOpenDialogEdit,
   onClickOpenDialogDelete,
+  onToggleHoctap,
 }) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
@@ -57,30 +59,46 @@ const BodyTable = ({
       >
         {row.link_test}
       </TableCell>
+      <TableCell
+        className="border-r border-slate-300"
+        align="center"
+      >
+        <Switch
+          checked={!!row.hien_thi_hoctap}
+          onChange={(e) => onToggleHoctap && onToggleHoctap(row, e.target.checked)}
+          color="success"
+          size="small"
+          disabled={!roles || !roles.includes("sửa chuyên đề")}
+        />
+      </TableCell>
     
       <TableCell
         align="right"
         className="bg-gray-300 flex justify-center items-center space-x-1"
         style={{width: "180px",}}
       >
-          <Button
-            variant="contained"
-            color="success"
-            size="small"
-            onClick={() => onClickOpenDialogEdit(row)}
-          >
-            <EditIcon style={{ fontSize: "20px" }} />
-          </Button>
+          {roles && roles.includes("sửa chuyên đề") && (
+            <Button
+              variant="contained"
+              color="success"
+              size="small"
+              onClick={() => onClickOpenDialogEdit(row)}
+            >
+              <EditIcon style={{ fontSize: "20px" }} />
+            </Button>
+          )}
 
-          <Button
-            variant="contained"
-            color="error"
-            size="small"
-            style={{ marginLeft: "4px" }}
-            onClick={() => onClickOpenDialogDelete(row._id)}
-          >
-            <DeleteOutlineIcon style={{ fontSize: "20px" }} />
-          </Button>
+          {roles && roles.includes("xóa chuyên đề") && (
+            <Button
+              variant="contained"
+              color="error"
+              size="small"
+              style={{ marginLeft: "4px" }}
+              onClick={() => onClickOpenDialogDelete(row._id)}
+            >
+              <DeleteOutlineIcon style={{ fontSize: "20px" }} />
+            </Button>
+          )}
       </TableCell>
     </TableRow>
   );

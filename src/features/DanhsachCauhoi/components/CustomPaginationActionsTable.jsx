@@ -91,7 +91,8 @@ TablePaginationActions.propTypes = {
 export default function CustomPaginationActionsTable({
   list,
   onClickOpenDialogEdit,
-  onClickOpenDialogDelete
+  onClickOpenDialogDelete,
+  onToggleActive
 }) {
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -211,6 +212,17 @@ export default function CustomPaginationActionsTable({
                   color: "#fff",
                   padding: "8px 8px",
                   backgroundColor: "#1976d2",
+                }}
+              >
+                Đang sử dụng
+              </TableCell>
+              <TableCell
+                align="center"
+                style={{
+                  fontSize: "14px",
+                  color: "#fff",
+                  padding: "8px 8px",
+                  backgroundColor: "#1976d2",
                   maxWidth: "150px",
                 }}
               >
@@ -228,11 +240,12 @@ export default function CustomPaginationActionsTable({
                 key={row._id}
                 onClickOpenDialogEdit={onClickOpenDialogEdit}
                 onClickOpenDialogDelete={onClickOpenDialogDelete}
+                onToggleActive={onToggleActive}
               />
             ))}
             {emptyRows > 0 && (
               <TableRow style={{ height: 53 * emptyRows }}>
-                <TableCell colSpan={6} />
+                <TableCell colSpan={10} />
               </TableRow>
             )}
           </TableBody>

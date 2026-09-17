@@ -1,21 +1,42 @@
 import React, { useState } from "react";
-import PropTypes from "prop-types";
-import { InputField } from "../../components/form-control/InputField";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { Button, LinearProgress } from "@mui/material";
-import { PasswordField } from "../../components/form-control/PasswordField";
-import axiosConfig from "./../../api/axiosConfig";
-import LoginIcon from "@mui/icons-material/Login";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import InputAdornment from "@mui/material/InputAdornment";
+import IconButton from "@mui/material/IconButton";
+import CircularProgress from "@mui/material/CircularProgress";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import { Link, useNavigate } from "react-router-dom";
-import RedoIcon from "@mui/icons-material/Redo";
 import { useDispatch } from "react-redux";
 import { loginAccount } from "../authSlice";
 import { useSnackbar } from "notistack";
 import { unwrapResult } from "@reduxjs/toolkit";
-import Cookies from "js-cookie";
 import { HEADER_1, HEADER_2 } from "../../../constant/constant";
+
+const BRAND = "#d97706";
+const BRAND_DARK = "#9a3412";
+
+const fieldSx = {
+  "& .MuiOutlinedInput-root": {
+    borderRadius: "10px",
+    backgroundColor: "#fff",
+    "&:hover .MuiOutlinedInput-notchedOutline": {
+      borderColor: BRAND,
+    },
+    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+      borderColor: BRAND,
+      borderWidth: 2,
+    },
+  },
+  "& .MuiInputLabel-root.Mui-focused": {
+    color: BRAND_DARK,
+  },
+};
 
 const schema = yup
   .object({
@@ -24,9 +45,10 @@ const schema = yup
   })
   .required();
 
-function LoginPage(props) {
+function LoginPage() {
   const dispatch = useDispatch();
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const form = useForm({
     defaultValues: {
       tentaikhoan: "",
@@ -41,7 +63,7 @@ function LoginPage(props) {
     const action = loginAccount(values);
     try {
       const resultAction = await dispatch(action);
-      const data = unwrapResult(resultAction);
+      unwrapResult(resultAction);
       enqueueSnackbar("Đăng nhập tài khoản thành công!", {
         anchorOrigin: {
           vertical: "bottom",
@@ -49,92 +71,210 @@ function LoginPage(props) {
         },
         variant: "success",
       });
-
-    // 1. SỬA: Không cần gọi Cookies.remove() trước đó, Cookies.set() sẽ tự động ghi đè
-    // 2. SỬA: Thêm cấu hình path và cùng domain để tất cả các trang, các API đều đọc được cookie này
-    // Cookies.set("refreshToken_thitracnghiem", data.refreshToken, {
-    //   expires: 7,
-    //   path: "/", // QUAN TRỌNG: Để cookie có hiệu lực toàn bộ trang web
-    //   sameSite: "Lax", // Nếu chạy chung localhost khác port, hoặc để "None" nếu chạy HTTPS khác domain
-    //   secure: window.location.protocol === "https:", // Tự động bật secure nếu chạy trên https
-    // });
-      navigate("/admin/danh-sach-cau-hoi");
+      navigate("/admin/quan-ly-cac-cuoc-thi");
     } catch (error) {
       setError("Sai tên tài khoản hoặc mật khẩu");
     }
   };
 
   const { isSubmitting } = form.formState;
+  const usernameField = form.register("tentaikhoan");
+  const passwordField = form.register("matkhau");
 
   return (
-      // <div className='flex items-center min-h-screen justify-center bg-center bg-cover  border-white' style={{ backgroundImage: `url('/banner.png')` }} >
-     <div className='flex items-center min-h-screen justify-center bg-center bg-cover  border-white' style={{ backgroundImage: `url('/c08.jpg')` }} > 
-      <div className="md:basis-1/2 sm:basis-full lg:basis-1/3 p-4 shadow-xl border-2 border-yellow-600 bg-yellow-100/90 rounded-lg mx-2">
-        {isSubmitting && <LinearProgress />}
-        <div className="flex flex-col items-center">
+    <div className="login-screen min-h-[100dvh] flex flex-col bg-[#fffaf0]">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&display=swap');
+        .login-screen { font-family: 'Public Sans', sans-serif; }
+        .login-display { font-family: 'Oswald', sans-serif; }
+        @keyframes loginFadeUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .login-fade-brand { animation: loginFadeUp 0.55s ease-out both; }
+        .login-fade-form { animation: loginFadeUp 0.55s ease-out 0.12s both; }
+      `}</style>
+
+      <section
+        className="relative flex min-h-[42vh] flex-col items-center justify-center overflow-hidden px-5 pb-12 pt-10 text-center sm:min-h-[48vh] sm:pb-16 sm:pt-14"
+        style={{
+          backgroundImage: `
+            linear-gradient(165deg, rgba(120,53,15,0.96) 0%, rgba(217,119,6,0.9) 55%, rgba(154,52,18,0.95) 100%),
+            url('/c08.jpg')
+          `,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <div
+          className="pointer-events-none absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: "url('/c08.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
+
+        <div className="login-fade-brand relative z-10 mx-auto max-w-3xl">
           <img
             src="/cong-an-hieu.png"
-            alt="conganhieu"
-            className="w-[100px]"
+            alt="Biểu trưng Công an nhân dân"
+            className="mx-auto mb-5 w-[76px] object-contain drop-shadow-lg sm:w-24"
           />
-          {/* <p className="uppercase text-[14px] md:text-[18px] font-bold text-[#ab0000]">Công an tỉnh Hưng Yên</p>
-          <p className="font-bold text-[14px] md:text-[18px] uppercase text-center text-[#ab0000]">
-            Phòng Cảnh sát giao thông
-          </p> */}
-          <p className="uppercase text-[14px] md:text-[18px] font-bold text-[#ab0000]">{HEADER_1}</p>
-          <p className="font-bold text-[14px] md:text-[18px] uppercase text-center text-[#ab0000]">
-           {HEADER_2}
+          <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-amber-100 sm:text-xl">
+            {HEADER_1}
+          </p>
+          <h1 className="login-display text-2xl font-semibold uppercase leading-tight tracking-wide text-white sm:text-4xl lg:text-[2.75rem]">
+            {HEADER_2}
+          </h1>
+          <div className="mx-auto mb-5 mt-4 h-0.5 w-14 rounded-full bg-amber-200" />
+          <p className="mx-auto max-w-2xl text-[13px] leading-relaxed text-amber-50 sm:text-base">
+            Ứng dụng công nghệ thông tin trong công tác tuyên truyền, phổ biến,
+            giáo dục pháp luật về trật tự an toàn giao thông
           </p>
         </div>
-        <form onSubmit={form.handleSubmit(handleSubmitForm)} className="py-1 px-1">
-          <InputField
-            name="tentaikhoan"
-            label="Tên tài khoản"
-            form={form}
-            disabled={false}
-          />
+      </section>
 
-          <PasswordField
-            name="matkhau"
-            label="Mật khẩu"
-            form={form}
-            disabled={false}
-          />
+      <section className="flex flex-1 flex-col bg-[#fffaf0] px-4 py-8 sm:px-6 sm:py-10">
+        <div className="login-fade-form mx-auto w-full max-w-lg">
+          <div className="mb-6 text-center">
+            <h2 className="login-display text-xl font-semibold uppercase tracking-wide text-[#9a3412] sm:text-2xl">
+              Đăng nhập hệ thống
+            </h2>
+            {/* <p className="mt-1 text-[13px] text-slate-500">
+              Nhập tài khoản được cấp để tiếp tục
+            </p> */}
+          </div>
 
-          {error && (
-            <p className="text-md text-center m-2 text-red-800">{error}</p>
-          )}
+          <form
+            onSubmit={form.handleSubmit(handleSubmitForm)}
+            className="space-y-4"
+            noValidate
+          >
+            <TextField
+              label="Tên tài khoản"
+              variant="outlined"
+              fullWidth
+              autoComplete="username"
+              disabled={isSubmitting}
+              error={Boolean(form.formState.errors.tentaikhoan)}
+              helperText={form.formState.errors.tentaikhoan?.message}
+              sx={fieldSx}
+              {...usernameField}
+              onChange={(event) => {
+                usernameField.onChange(event);
+                setError("");
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <PersonOutlineIcon sx={{ color: BRAND }} />
+                  </InputAdornment>
+                ),
+              }}
+            />
 
-          <div>
+            <TextField
+              label="Mật khẩu"
+              variant="outlined"
+              fullWidth
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              disabled={isSubmitting}
+              error={Boolean(form.formState.errors.matkhau)}
+              helperText={form.formState.errors.matkhau?.message}
+              sx={fieldSx}
+              {...passwordField}
+              onChange={(event) => {
+                passwordField.onChange(event);
+                setError("");
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LockOutlinedIcon sx={{ color: BRAND }} />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                      onClick={() => setShowPassword((value) => !value)}
+                      edge="end"
+                      size="small"
+                      disabled={isSubmitting}
+                    >
+                      {showPassword ? (
+                        <VisibilityOffOutlinedIcon fontSize="small" />
+                      ) : (
+                        <VisibilityOutlinedIcon fontSize="small" />
+                      )}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            {error && (
+              <p role="alert" className="text-center text-sm font-medium text-red-700">
+                {error}
+              </p>
+            )}
+
             <Button
               type="submit"
               variant="contained"
-              startIcon={<LoginIcon />}
-              color="warning"
               fullWidth
-              style={{ margin: "8px auto" }}
+              size="large"
+              disabled={isSubmitting}
+              sx={{
+                mt: 1,
+                py: 1.35,
+                borderRadius: "10px",
+                textTransform: "none",
+                fontWeight: 700,
+                fontSize: "1rem",
+                backgroundColor: BRAND,
+                boxShadow: "0 6px 16px rgba(217, 119, 6, 0.28)",
+                "&:hover": {
+                  backgroundColor: BRAND_DARK,
+                  boxShadow: "0 8px 20px rgba(154, 52, 18, 0.3)",
+                },
+                "&.Mui-disabled": {
+                  backgroundColor: "#e5ad58",
+                  color: "#fff",
+                },
+              }}
             >
-              Đăng nhập
+              {isSubmitting ? (
+                <span className="inline-flex items-center gap-2">
+                  <CircularProgress size={20} sx={{ color: "#fff" }} />
+                  Đang xác thực...
+                </span>
+              ) : (
+                "Đăng nhập"
+              )}
             </Button>
-          </div>
 
-          <Link to="/doimatkhau">
-            <p className="my-2 text-end underline font-semibold text-red-800">
+            <Link
+              to="/doimatkhau"
+              className="block text-right text-sm font-semibold text-[#9a3412] underline decoration-amber-600/50 underline-offset-2 hover:text-[#7c2d12]"
+            >
               Đổi mật khẩu
+            </Link>
+          </form>
+
+          <footer className="mt-10 space-y-1 border-t border-amber-200/80 pt-5 text-center text-xs leading-relaxed text-slate-500 sm:text-[13px]">
+            <p className="font-semibold uppercase">
+              Ứng dụng do Cục Cảnh sát giao thông và Công an tỉnh Hưng Yên phối hợp xây dựng
+              {/* Ứng dụng do Công an tỉnh Hưng Yên triển khai thực hiện */}
             </p>
-          </Link>
-        </form>
-
-         <p className="text-center text-gray-500 font-semibold uppercase text-[14px]">Cục Cảnh sát giao thông và Công an tỉnh Hưng Yên phối hợp thực hiện</p>
-                 {/* <p className="text-center text-gray-500 font-semibold uppercase text-[14px]"></p> */}
-        <p className="text-center text-slate-600 text-[10px] md:text-[14px]">Ứng dụng công nghệ thông tin trong công tác tuyên truyền, phổ biến, giáo dục pháp luật về trật tự an toàn giao thông</p>
-
-      </div>
-
+            <p>© 2026 — Tuyên truyền, đánh giá nhận thức, kiến thức pháp luật về trật tự, an toàn giao thông</p>
+          </footer>
+        </div>
+      </section>
     </div>
   );
 }
-
-LoginPage.propTypes = {};
 
 export default LoginPage;

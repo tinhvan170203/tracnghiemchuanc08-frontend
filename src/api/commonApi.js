@@ -89,7 +89,11 @@ const commonApi = {
     deleteTailieu(params) {
         const url = `/api/public/tai-lieu/delete`;
         return axiosConfig.delete(url, { params })
-    }
+    },
+    logFanpageClick(data) {
+        const url = `/api/public/fanpage-click`;
+        return axiosCommon.post(url, data);
+    },
 };
 
 export default commonApi;

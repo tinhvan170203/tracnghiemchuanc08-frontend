@@ -7,7 +7,7 @@ import Slide from "@mui/material/Slide";
 import AutoAwesomeMotionIcon from "@mui/icons-material/AutoAwesomeMotion";
 import CheckIcon from "@mui/icons-material/Check";
 import CancelIcon from "@mui/icons-material/Cancel";
-import { Box, Button, Grid, IconButton, LinearProgress, styled, Typography } from "@mui/material";
+import { Box, Button, Checkbox, FormControlLabel, Grid, IconButton, LinearProgress, styled, Typography } from "@mui/material";
 import { InputField } from "../../../components/form-control/InputField";
 import * as yup from "yup";
 import { useForm } from "react-hook-form";
@@ -59,7 +59,8 @@ export default function DialogEditCauhoi({
       option_e: "",
       image: "",
       answer: null,
-      chuyende: ''
+      chuyende: '',
+      active: true
     },
     resolver: yupResolver(schema),
   });
@@ -78,6 +79,7 @@ export default function DialogEditCauhoi({
       setValue("option_d", item.option_d);
       setValue("option_e", item.option_e);
       setValue("answer", item.answer, { shouldValidate: true });
+      setValue("active", item.active !== false);
     }
   }, [item]);
 
@@ -92,6 +94,7 @@ export default function DialogEditCauhoi({
       formData.append('option_d', values.option_d);
       formData.append('option_e', values.option_e);
       formData.append('answer', values.answer);
+      formData.append('active', values.active !== false ? 'true' : 'false');
       formData.append('id_edit', item._id);
       formData.append('file', file);
       await onSubmit(formData);
@@ -164,7 +167,7 @@ export default function DialogEditCauhoi({
                 <span>Ảnh đã lưu</span>
                 {watch('image') !== "" && (
                   <div className="md:w-[400px]">
-                    <img src={`${API_SERVER}c08/uploads/${watch('image')}`} alt="ảnh câu hỏi" />
+                    <img src={`${API_SERVER}c08/upload/${watch('image')}`} alt="ảnh câu hỏi" />
                   </div>
                 )}
                 <Grid item xs={12} md={12} lg={12}>
@@ -235,6 +238,17 @@ export default function DialogEditCauhoi({
                       { value: "option_d", label: "Đáp án D" },
                       { value: "option_e", label: "Đáp án E" },
                     ]}
+                  />
+                </Grid>
+                <Grid item xs={12} md={12} lg={12}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={form.watch("active") !== false}
+                        onChange={(e) => form.setValue("active", e.target.checked)}
+                      />
+                    }
+                    label="Đang sử dụng"
                   />
                 </Grid>
               </Grid>

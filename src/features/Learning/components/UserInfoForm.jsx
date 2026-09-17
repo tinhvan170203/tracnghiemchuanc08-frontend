@@ -13,11 +13,12 @@ export default function UserInfoForm({ onSubmit, error }) {
     name: '',
     birthday: '',
     gioitinh: 'Nam',
-    loaixe: 'Mô tô',
+    loaixe: 'Xe mô tô',
     hang_gplx: '',
     nghenghiep: '',
     donvi: '',
     phone: '',
+    hokhau: '',
   });
   const [localError, setLocalError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -41,6 +42,7 @@ export default function UserInfoForm({ onSubmit, error }) {
       nghenghiep,
       donvi,
       phone,
+      hokhau,
     } = form;
 
     if (!name.trim()) {
@@ -72,7 +74,11 @@ export default function UserInfoForm({ onSubmit, error }) {
       return;
     }
     if (!phone.trim()) {
-      setLocalError('Vui lòng nhập địa chỉ');
+      setLocalError('Vui lòng nhập xã, phường');
+      return;
+    }
+    if (!hokhau.trim()) {
+      setLocalError('Vui lòng nhập tỉnh, thành phố');
       return;
     }
 
@@ -88,7 +94,7 @@ export default function UserInfoForm({ onSubmit, error }) {
         nghenghiep: nghenghiep.trim(),
         donvi: donvi.trim(),
         phone: phone.trim(),
-        hokhau: '',
+        hokhau: hokhau.trim(),
       });
     } finally {
       setSubmitting(false);
@@ -113,18 +119,18 @@ export default function UserInfoForm({ onSubmit, error }) {
       </div>
       <form
         onSubmit={handleSubmit}
-        className="max-w-md mx-auto p-8 bg-white shadow-2xl rounded-3xl border border-gray-100"
+        className="max-w-md mx-auto p-4 bg-white shadow-2xl rounded-3xl border border-gray-100"
       >
-        <div className="text-center mb-8">
-          <h3 className="text-2xl font-extrabold text-gray-800">
+        <div className="text-center mb-2">
+          {/* <h3 className="text-xl font-extrabold text-gray-800">
             Thông tin dự thi
-          </h3>
+          </h3> */}
           <p className="text-gray-500 text-sm mt-2">
             Vui lòng điền đầy đủ thông tin trước khi bắt đầu làm bài
           </p>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-2">
           <div>
             <label className={labelClass}>Họ và tên</label>
             <input
@@ -170,9 +176,12 @@ export default function UserInfoForm({ onSubmit, error }) {
                 onChange={setField('loaixe')}
                 className={inputClass}
               >
-                <option value="Ô tô">Ô tô</option>
-                <option value="Mô tô">Mô tô</option>
-                <option value="Cả hai">Cả hai</option>
+                <option value="Ô tô khách">Ô tô khách</option>
+                <option value="Xe tải">Xe tải</option>
+                <option value="Xe đầu kéo">Xe đầu kéo</option>
+                <option value="Xe mô tô">Xe mô tô</option>
+                <option value="Xe con">Xe con</option>
+                <option value="Xe gắn máy">Xe gắn máy</option>
               </select>
             </div>
             <div className="flex-1 min-w-0">
@@ -211,15 +220,27 @@ export default function UserInfoForm({ onSubmit, error }) {
             </div>
           </div>
 
-          <div>
-            <label className={labelClass}>Địa chỉ</label>
-            <input
-              type="text"
-              value={form.phone}
-              onChange={setField('phone')}
-              className={inputClass}
-              placeholder="Địa chỉ"
-            />
+          <div className="flex gap-3">
+            <div className="flex-1 min-w-0">
+              <label className={labelClass}>Xã/Phường</label>
+              <input
+                type="text"
+                value={form.phone}
+                onChange={setField('phone')}
+                className={inputClass}
+                placeholder="Xã/Phường"
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <label className={labelClass}>Tỉnh/Thành phố</label>
+              <input
+                type="text"
+                value={form.hokhau}
+                onChange={setField('hokhau')}
+                className={inputClass}
+                placeholder="Tỉnh/Thành phố"
+              />
+            </div>
           </div>
         </div>
 
@@ -235,7 +256,7 @@ export default function UserInfoForm({ onSubmit, error }) {
         <button
           type="submit"
           disabled={submitting}
-          className="mt-8 w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl py-3.5 font-bold text-lg shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-4 focus:ring-orange-300 disabled:opacity-70 disabled:cursor-not-allowed transition-all duration-200 flex justify-center items-center"
+          className="mt-8 w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl py-2 font-semibold text-lg shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-4 focus:ring-orange-300 disabled:opacity-70 disabled:cursor-not-allowed transition-all duration-200 flex justify-center items-center"
         >
           {submitting ? 'Đang xử lý...' : 'Bắt đầu làm bài'}
         </button>

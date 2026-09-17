@@ -11,7 +11,7 @@ export default function ModalLoading({open}) {
       >
         <div className="flex flex-col items-center">
           <CircularProgress color="primary" className='!text-white' />
-          <p className='text-[13px] mt-2'>Đang đồng bộ dữ liệu từ Công an các địa phương</p> 
+          <p className='text-[13px] mt-2'>Vui lòng đợi...</p> 
         </div>
       </Backdrop>
   );

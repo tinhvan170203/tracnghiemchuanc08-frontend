@@ -8,19 +8,26 @@ import Slide from '@mui/material/Slide';
 import NotListedLocationIcon from '@mui/icons-material/NotListedLocation';
 import CheckIcon from '@mui/icons-material/Check';
 import CancelIcon from '@mui/icons-material/Cancel';
+import CircularProgress from '@mui/material/CircularProgress';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-export default function DialogDelete({open,onCloseDialogDelete, onConfirmDelete, onCancelDelete}) {
+export default function DialogDelete({
+  open,
+  onCloseDialogDelete,
+  onConfirmDelete,
+  onCancelDelete,
+  loading = false,
+}) {
 
   return (
     <div>
       <Dialog
         disableEscapeKeyDown={true}
         onClose={(event, reason) => { // bỏ click ở nền đen mà mất dialog
-            if (reason !== "backdropClick") {
+            if (!loading && reason !== "backdropClick") {
                 onCloseDialogDelete(event, reason);
             }
           }}
@@ -40,8 +47,23 @@ export default function DialogDelete({open,onCloseDialogDelete, onConfirmDelete,
           </DialogContentText>
         </DialogContent>
             <div className="flex justify-evenly pb-4">
-                <Button variant="contained" color='success' onClick={onConfirmDelete}><CheckIcon/> Đồng ý</Button>
-                <Button variant="contained" color='error' onClick={onCancelDelete}><CancelIcon/> Cancel</Button>
+                <Button
+                  variant="contained"
+                  color='success'
+                  onClick={onConfirmDelete}
+                  disabled={loading}
+                  startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <CheckIcon />}
+                >
+                  {loading ? "Đang xóa..." : "Đồng ý"}
+                </Button>
+                <Button
+                  variant="contained"
+                  color='error'
+                  onClick={onCancelDelete}
+                  disabled={loading}
+                >
+                  <CancelIcon/> Hủy
+                </Button>
             </div>
       </Dialog>
     </div>

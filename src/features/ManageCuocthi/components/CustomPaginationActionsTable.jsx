@@ -95,6 +95,9 @@ export default function CustomPaginationActionsTable({
   onHandleChangeStatusCuocthi,
   onExportExcel,
   exportingId,
+  isContestSuperAdmin,
+  creatorOptions,
+  onAssignOwner,
 }) {
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -196,6 +199,19 @@ export default function CustomPaginationActionsTable({
               >
                 Trạng thái
               </TableCell>
+              {isContestSuperAdmin && (
+                <TableCell
+                  align="left"
+                  style={{
+                    fontSize: "14px",
+                    color: "#fff",
+                    padding: "8px 8px",
+                    backgroundColor: "#1976d2",
+                  }}
+                >
+                  Tài khoản tạo
+                </TableCell>
+              )}
               <TableCell
                 align="center"
                 style={{
@@ -223,6 +239,9 @@ export default function CustomPaginationActionsTable({
                 onHandleChangeStatusCuocthi={onHandleChangeStatusCuocthi}
                 onExportExcel={onExportExcel}
                 exportingId={exportingId}
+                isContestSuperAdmin={isContestSuperAdmin}
+                creatorOptions={creatorOptions}
+                onAssignOwner={onAssignOwner}
               />
             ))}
             {emptyRows > 0 && (

@@ -1,51 +1,71 @@
 import React from "react";
-import { Box } from "@mui/material";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import { Box, Typography } from "@mui/material";
+import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 
 /**
- * Static thumbnail (YouTube-lite): no <video> decode in the list.
+ * Thumbnail tĩnh (không decode video trong list) — trực quan, nhẹ.
  */
-function VideoThumb({ isSelected }) {
+function VideoThumb({ isSelected, order }) {
   return (
     <Box
       sx={{
-        width: { xs: 110, sm: 125 },
-        minWidth: { xs: 110, sm: 125 },
-        height: 70,
-        borderRadius: 1.5,
+        width: { xs: 88, sm: 108 },
+        minWidth: { xs: 88, sm: 108 },
+        height: { xs: 56, sm: 64 },
+        borderRadius: 1.75,
         overflow: "hidden",
-        bgcolor: "#0f172a",
-        backgroundImage:
-          "linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #334155 100%)",
         position: "relative",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
         flexShrink: 0,
-        m: 1,
+        background:
+          "linear-gradient(145deg, #1e3a5f 0%, #0f172a 45%, #ea580c 160%)",
+        boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.08)",
       }}
     >
+      <Typography
+        sx={{
+          position: "absolute",
+          top: 4,
+          left: 6,
+          fontSize: 10,
+          fontWeight: 800,
+          color: "rgba(255,255,255,0.85)",
+          zIndex: 2,
+        }}
+      >
+        #{order}
+      </Typography>
+
       <Box
         sx={{
           position: "absolute",
           inset: 0,
-          bgcolor: isSelected ? "rgba(37, 99, 235, 0.35)" : "rgba(0, 0, 0, 0.15)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          bgcolor: isSelected ? "rgba(234, 88, 12, 0.35)" : "rgba(0,0,0,0.2)",
           transition: "background-color 0.2s",
-          "&:hover": {
-            bgcolor: "rgba(0, 0, 0, 0.35)",
-          },
         }}
       >
-        <PlayArrowIcon
+        <Box
           sx={{
-            fontSize: 28,
-            color: "#ffffff",
-            filter: "drop-shadow(0px 2px 4px rgba(0,0,0,0.6))",
+            width: 30,
+            height: 30,
+            borderRadius: "50%",
+            bgcolor: isSelected ? "#ea580c" : "rgba(255,255,255,0.92)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.35)",
           }}
-        />
+        >
+          <PlayArrowRoundedIcon
+            sx={{
+              fontSize: 22,
+              color: isSelected ? "#fff" : "#ea580c",
+              ml: "1px",
+            }}
+          />
+        </Box>
       </Box>
     </Box>
   );

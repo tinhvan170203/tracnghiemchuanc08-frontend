@@ -92,7 +92,8 @@ export default function CustomPaginationActionsTable({
   list,
   onClickOpenDialogEdit,
   onClickOpenDialogDelete,
-  onViewPlayer
+  onViewPlayer,
+  onToggleActive,
 }) {
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
@@ -113,8 +114,8 @@ export default function CustomPaginationActionsTable({
   // const roles = useSelector((state) => state.authReducer.roles_x01);
   return (
     <>
-      <TableContainer component={Paper}>
-        <Table aria-label="custom pagination table">
+      <TableContainer component={Paper} sx={{ overflowX: "auto" }}>
+        <Table aria-label="custom pagination table" sx={{ minWidth: 720 }}>
           <TableHead>
             <TableRow>
               <TableCell
@@ -173,6 +174,17 @@ export default function CustomPaginationActionsTable({
                Lượt xem
               </TableCell>
               <TableCell
+                align="left"
+                style={{
+                  fontSize: "14px",
+                  color: "#fff",
+                  padding: "8px 8px",
+                  backgroundColor: "#1976d2",
+                }}
+              >
+               Hiển thị
+              </TableCell>
+              <TableCell
                 align="center"
                 style={{
                   fontSize: "14px",
@@ -196,12 +208,13 @@ export default function CustomPaginationActionsTable({
                 key={row._id}
                 onClickOpenDialogEdit={onClickOpenDialogEdit}
                 onClickOpenDialogDelete={onClickOpenDialogDelete}
-                 onViewPlayer={ onViewPlayer}
+                onViewPlayer={onViewPlayer}
+                onToggleActive={onToggleActive}
               />
             ))}
             {emptyRows > 0 && (
               <TableRow style={{ height: 53 * emptyRows }}>
-                <TableCell colSpan={6} />
+                <TableCell colSpan={7} />
               </TableRow>
             )}
           </TableBody>

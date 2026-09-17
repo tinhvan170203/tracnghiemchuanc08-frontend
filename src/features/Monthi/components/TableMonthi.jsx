@@ -6,7 +6,7 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
-import { Box, Button, Grid } from "@mui/material";
+import { Box, Button, Grid, Switch } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { useSelector } from "react-redux";
@@ -17,6 +17,7 @@ const TableMonthi = ({
   page,
   onClickOpenDialogDelete, 
   onClickOpenDialogEditDonvi,
+  onToggleHoctap,
   tongbanghi
 }) => {
   const roles = useSelector((state) => (state.authReducer.roles_x01));
@@ -61,6 +62,12 @@ const TableMonthi = ({
                 Id cuộc thi tự kiểm tra học tập
               </TableCell>
               <TableCell
+                align="center"
+                style={{ fontSize: "14px",color: "#fff", padding: "8px 8px" }}
+              >
+                Hiện tự học
+              </TableCell>
+              <TableCell
                 align="right"
                 style={{ fontSize: "14px",color: "#fff", padding: "8px 8px" }}
               >
@@ -83,6 +90,17 @@ const TableMonthi = ({
                 <TableCell align="left">{donvi.mota}</TableCell>
                 <TableCell align="left">{donvi.thutu}</TableCell>
                 <TableCell align="left">{donvi.link_test}</TableCell>
+                <TableCell align="center">
+                  {roles && roles.includes("sửa môn thi") ? (
+                    <Switch
+                      checked={!!donvi.hien_thi_hoctap}
+                      onChange={(e) => onToggleHoctap(donvi, e.target.checked)}
+                      color="success"
+                    />
+                  ) : (
+                    donvi.hien_thi_hoctap ? "Có" : "Không"
+                  )}
+                </TableCell>
                 <TableCell
                   align="right"
                 >

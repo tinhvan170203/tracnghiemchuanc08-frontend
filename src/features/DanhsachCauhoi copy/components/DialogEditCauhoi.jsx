@@ -7,7 +7,7 @@ import Slide from "@mui/material/Slide";
 import AutoAwesomeMotionIcon from "@mui/icons-material/AutoAwesomeMotion";
 import CheckIcon from "@mui/icons-material/Check";
 import CancelIcon from "@mui/icons-material/Cancel";
-import { Box, Button, Grid, IconButton, LinearProgress, styled, Typography } from "@mui/material";
+import { Box, Button, Checkbox, FormControlLabel, Grid, IconButton, LinearProgress, styled, Typography } from "@mui/material";
 import { InputField } from "../../../components/form-control/InputField";
 import * as yup from "yup";
 import { useForm } from "react-hook-form";
@@ -43,7 +43,8 @@ export default function DialogEditCauhoi({
   const form = useForm({
     defaultValues: {
       title: "",
-      link_test: ""
+      link_test: "",
+      hien_thi_hoctap: false,
     },
     resolver: yupResolver(schema),
   });
@@ -54,6 +55,7 @@ export default function DialogEditCauhoi({
     if (item) {
       setValue("title", item.title, { shouldValidate: true });
       setValue("link_test", item.link_test);
+      setValue("hien_thi_hoctap", !!item.hien_thi_hoctap);
     }
   }, [item]);
 
@@ -126,8 +128,19 @@ export default function DialogEditCauhoi({
                       disabled={false}
                     />
                   </Grid>
-                </Grid>
+                  <Grid item xs={12} md={12} lg={12}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={!!form.watch("hien_thi_hoctap")}
+                          onChange={(e) => form.setValue("hien_thi_hoctap", e.target.checked)}
+                        />
+                      }
+                      label="Hiện trên trang tự học"
+                    />
+                  </Grid>
 
+              </Grid>
               </Grid>
               <DialogActions>
                 <Button

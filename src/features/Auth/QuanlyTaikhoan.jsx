@@ -1,23 +1,31 @@
-import { Button, LinearProgress, Paper, Skeleton, TextField } from '@mui/material'
-import React, {useState} from 'react'
-import FormAddRoleUser from './components/FormAddRoleUser'
-import userApi from './../../api/userApi';
-import { useSnackbar } from 'notistack';
-import TableUser from './components/TableUser';
-import PaginationComponent from '../../components/PaginationComponent';
-import { useLocation, useSearchParams, useNavigate } from 'react-router-dom';
-import { useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from "react";
+import {
+  Box,
+  Button,
+  LinearProgress,
+  Paper,
+  Skeleton,
+  Stack,
+  TextField,
+  Typography,
+  Grid,
+} from "@mui/material";
+import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
+import PersonAddAltIcon from "@mui/icons-material/PersonAddAlt";
+import FormAddRoleUser from "./components/FormAddRoleUser";
+import userApi from "./../../api/userApi";
+import { useSnackbar } from "notistack";
+import TableUser from "./components/TableUser";
+import PaginationComponent from "../../components/PaginationComponent";
+import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
 import querystring from "query-string";
-import { useEffect } from 'react';
-import DialogDelete from '../../components/DialogDelete';
-import { useDispatch, useSelector } from 'react-redux';
-import { changeRole } from '../../auth/authSlice';
-import jwt_decode from "jwt-decode"
-
+import DialogDelete from "../../components/DialogDelete";
+import DialogResetPassword from "./components/DialogResetPassword";
+import { useDispatch, useSelector } from "react-redux";
 
 export default function QuanlyTaikhoan() {
-  const [tentaikhoan, setTentaikhoan] = useState('');
-  const [matkhau, setMatkhau] = useState('');
+  const [tentaikhoan, setTentaikhoan] = useState("");
+  const [matkhau, setMatkhau] = useState("");
   const [thutu, setThutu] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -33,21 +41,18 @@ export default function QuanlyTaikhoan() {
   const navigate = useNavigate();
   let [searchParams, setSearchParams] = useSearchParams();
 
-
-  // state open dialog delete user
   const [openDialogDelete, setOpenDialogDelete] = useState({
     status: false,
     id_Delete: null,
   });
 
-   // state open dialog edit user
-  const [openDialogEditUser, setOpenDialogEditUser] = useState({
+  const [openDialogReset, setOpenDialogReset] = useState({
     status: false,
     user: null,
   });
+  const [resetting, setResetting] = useState(false);
 
-  const dispatch = useDispatch()
-  const roles = useSelector((state) =>(state.authReducer.roles_x01));
+  const roles = useSelector((state) => state.authReducer.roles_x01);
 
   const queryParams = useMemo(() => {
     const params = querystring.parse(location.search);
@@ -57,7 +62,7 @@ export default function QuanlyTaikhoan() {
     };
   }, [location.search]);
 
-  const {enqueueSnackbar} = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
 
   const handleCloseDialogDelete = () => {
     setOpenDialogDelete({
@@ -73,60 +78,50 @@ export default function QuanlyTaikhoan() {
     });
   };
 
-  // func thay đổi số trang
   const handleChangePage = (value) => {
     setPagination({
       ...pagination,
       page: value,
     });
 
-    const newFilters = {
+    setSearchParams({
       ...queryParams,
       page: value,
-    };
-
-    setSearchParams(newFilters);
+    });
   };
- 
-  //func add user
+
   const handleSubmit = async () => {
     try {
       setIsSubmitting(true);
-      let res = await userApi.addUser({tentaikhoan, matkhau, thutu});
-      setIsSubmitting(false)
-      enqueueSnackbar('Thêm mới tài khoản thành công!',{
-        anchorOrigin: {
-          vertical: 'bottom',
-          horizontal: 'right'
-        },
-         variant: 'success' 
+      let res = await userApi.addUser({ tentaikhoan, matkhau, thutu });
+      setIsSubmitting(false);
+      enqueueSnackbar("Thêm mới tài khoản thành công!", {
+        anchorOrigin: { vertical: "bottom", horizontal: "right" },
+        variant: "success",
       });
-      setTentaikhoan('');
-      setMatkhau('');
+      setTentaikhoan("");
+      setMatkhau("");
       setThutu(1);
       setUserList(res.data.users);
       setPagination({
-        page:1, 
-        total: res.data.total
+        page: 1,
+        total: res.data.total,
       });
     } catch (error) {
-
-      if(error.message === "Token không hợp lệ vui lòng đăng nhập hoặc đã hết hạn. Vui lòng đăng nhập lại"){
-        navigate('/login');
+      setIsSubmitting(false);
+      if (
+        error.message ===
+        "Token không hợp lệ vui lòng đăng nhập hoặc đã hết hạn. Vui lòng đăng nhập lại"
+      ) {
+        navigate("/login");
         enqueueSnackbar(error.message, {
-          anchorOrigin: {
-            vertical: "bottom",
-            horizontal: "right",
-          },
+          anchorOrigin: { vertical: "bottom", horizontal: "right" },
           variant: "error",
         });
-      };
+      }
 
-      enqueueSnackbar(error.response.data.message, {
-        anchorOrigin: {
-          vertical: "bottom",
-          horizontal: "right",
-        },
+      enqueueSnackbar(error.response?.data?.message || error.message, {
+        anchorOrigin: { vertical: "bottom", horizontal: "right" },
         variant: "error",
       });
     }
@@ -134,47 +129,28 @@ export default function QuanlyTaikhoan() {
 
   const handleSubmitEditUser = async (values) => {
     let page = pagination.page;
-    const obj= {...values, page}
+    const obj = { ...values, page };
     try {
-      
       let res = await userApi.editUser(obj);
-      // const accessToken = localStorage.getItem('accessToken_thitracnghiem');
-      // const decodedToken = jwt_decode(accessToken);
-      // // console.log(obj.id_edit)
-      // // console.log(decodedToken.userId)
-      // // console.log(obj.id_edit === decodedToken.userId)
-      // if(obj.id_edit === decodedToken.userId){
-      //   // console.log(values)
-      //   dispatch(changeRole(values.roles))
-      // }
-
       setUserList(res.data.users);
-      setUserTemp(null)
+      setUserTemp(null);
       enqueueSnackbar(res.data.message, {
-        anchorOrigin: {
-          vertical: "bottom",
-          horizontal: "right",
-        },
+        anchorOrigin: { vertical: "bottom", horizontal: "right" },
         variant: "success",
       });
-
     } catch (error) {
-      if(error.message === "Token không hợp lệ vui lòng đăng nhập hoặc đã hết hạn. Vui lòng đăng nhập lại"){
-        navigate('/login');
+      if (
+        error.message ===
+        "Token không hợp lệ vui lòng đăng nhập hoặc đã hết hạn. Vui lòng đăng nhập lại"
+      ) {
+        navigate("/login");
         enqueueSnackbar(error.message, {
-          anchorOrigin: {
-            vertical: "bottom",
-            horizontal: "right",
-          },
+          anchorOrigin: { vertical: "bottom", horizontal: "right" },
           variant: "error",
         });
-      };
-console.log(error)
+      }
       enqueueSnackbar(error.message, {
-        anchorOrigin: {
-          vertical: "bottom",
-          horizontal: "right",
-        },
+        anchorOrigin: { vertical: "bottom", horizontal: "right" },
         variant: "error",
       });
     }
@@ -190,12 +166,10 @@ console.log(error)
         total: res.data.total,
       });
 
-      const newFilters = {
+      setSearchParams({
         ...queryParams,
         page: 1,
-      };
-
-      setSearchParams(newFilters);
+      });
 
       setOpenDialogDelete({
         ...openDialogDelete,
@@ -203,28 +177,22 @@ console.log(error)
       });
 
       enqueueSnackbar(res.data.message, {
-        anchorOrigin: {
-          vertical: "bottom",
-          horizontal: "right",
-        },
+        anchorOrigin: { vertical: "bottom", horizontal: "right" },
         variant: "success",
       });
     } catch (error) {
-      if(error.message === "Token không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại"){
-        navigate('/login');
+      if (
+        error.message ===
+        "Token không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại"
+      ) {
+        navigate("/login");
         enqueueSnackbar(error.message, {
-          anchorOrigin: {
-            vertical: "bottom",
-            horizontal: "right",
-          },
+          anchorOrigin: { vertical: "bottom", horizontal: "right" },
           variant: "error",
         });
-      };
+      }
       enqueueSnackbar(error.message, {
-        anchorOrigin: {
-          vertical: "bottom",
-          horizontal: "right",
-        },
+        anchorOrigin: { vertical: "bottom", horizontal: "right" },
         variant: "error",
       });
     }
@@ -237,8 +205,7 @@ console.log(error)
     });
   };
 
-  // useEffect get user list
-useEffect(() => {
+  useEffect(() => {
     const fetchUsers = async () => {
       try {
         const res = await userApi.getUsers(queryParams.page);
@@ -248,27 +215,12 @@ useEffect(() => {
           total: res.data.total,
         });
         setLoading(false);
-      
       } catch (error) {
-        if(error.message === "Token không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại"){
-          enqueueSnackbar(error.message,{
-            anchorOrigin: {
-              vertical: 'bottom',
-              horizontal: 'right'
-            },
-             variant: 'error' 
-          });
-          navigate('/login');
-        }else{
-          enqueueSnackbar(error.message,{
-            anchorOrigin: {
-              vertical: 'bottom',
-              horizontal: 'right'
-            },
-             variant: 'error' 
-          });
-          navigate('/login');
-        }
+        enqueueSnackbar(error.message, {
+          anchorOrigin: { vertical: "bottom", horizontal: "right" },
+          variant: "error",
+        });
+        navigate("/login");
       }
     };
 
@@ -276,61 +228,200 @@ useEffect(() => {
   }, [queryParams]);
 
   const handleSettingRoleUser = (user) => {
-    setUserTemp(user)
+    setUserTemp(user);
+  };
+
+  const handleOpenResetPassword = (user) => {
+    setOpenDialogReset({ status: true, user });
+  };
+
+  const handleCloseResetPassword = () => {
+    if (resetting) return;
+    setOpenDialogReset({ status: false, user: null });
+  };
+
+  const handleSubmitResetPassword = async (matkhau_moi) => {
+    if (!openDialogReset.user?._id) return;
+    setResetting(true);
+    try {
+      const res = await userApi.resetPassword(openDialogReset.user._id, {
+        matkhau_moi,
+      });
+      enqueueSnackbar(res.data.message || "Reset mật khẩu thành công", {
+        anchorOrigin: { vertical: "bottom", horizontal: "right" },
+        variant: "success",
+      });
+      setOpenDialogReset({ status: false, user: null });
+    } catch (error) {
+      enqueueSnackbar(error?.message || "Reset mật khẩu thất bại", {
+        anchorOrigin: { vertical: "bottom", horizontal: "right" },
+        variant: "error",
+      });
+    } finally {
+      setResetting(false);
+    }
   };
 
   return (
-    <div className='flex flex-col mx-2 space-x-1 lg:flex-row'>
-      <div className='lg:basis-2/3 bg-white px-4'>
-        <h1 className='text-gray-900 text-center mt-2 pt-4 font-bold sm:text-[14px] md:text-[16px]'>Quản lý tài khoản người dùng</h1>
-        {isSubmitting && <LinearProgress />}
+    <Box sx={{ px: { xs: 1.5, sm: 2 }, pb: 3, pt: 1 }}>
+      {/* Header */}
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 2, sm: 2.5 },
+          mb: 2,
+          borderRadius: 3,
+          border: "1px solid",
+          borderColor: "divider",
+          // background: "linear-gradient(135deg, #2263eb 0%, #1e3a5f 55%, #2563eb 100%)",
+          // color: "white",
+        }}
+      >
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Box
+            sx={{
+              p: 1.25,
+              borderRadius: 2,
+              bgcolor: "rgba(255,255,255,0.15)",
+              display: "flex",
+            }}
+          >
+            <ManageAccountsIcon />
+          </Box>
+          <Box>
+            <Typography fontWeight={700} fontSize={{ xs: "1rem", sm: "1.15rem" }}>
+              Quản lý tài khoản
+            </Typography>
+            <Typography variant="body2" sx={{ opacity: 0.85 }}>
+              Thêm tài khoản, phân quyền và quản lý người dùng hệ thống
+            </Typography>
+          </Box>
+        </Stack>
+      </Paper>
 
-        {roles && roles.includes("thêm tài khoản") &&(
-          <form className='flex flex-col items-center space-x-0 justify-start mt-8 flex-wrap md:flex-row md:space-x-4' >
-            <div className='my-2 w-full md:w-[auto]'>
-            <TextField name="tentaikhoan" fullWidth={true} label="Tên tài khoản" value={tentaikhoan} onChange={(e) => setTentaikhoan(e.target.value)} size="small"/>
-            </div>
-            <div className='my-2 w-full md:w-[auto]'>
-            <TextField name="matkhau" fullWidth={true} label="Mật khẩu" value={matkhau} onChange={(e) => setMatkhau(e.target.value)} size="small"/>
-            </div>
-            <div className='my-2 w-full md:w-[auto]'>
-            <TextField name="thutu" fullWidth={true} label="Thứ tự" value={thutu} onChange={(e) => setThutu(e.target.value)} type="number"  size="small"/>
-            </div>
-            <div className='my-2 w-full md:w-[auto] text-center'>
-            <Button onClick={handleSubmit} variant="contained" disabled={isSubmitting}>Thêm mới</Button>
-            </div>
-          </form>
-        )}
+      <Grid container spacing={2}>
+        {/* Left: list + add form */}
+        <Grid item xs={12} lg={8}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 2, sm: 2.5 },
+              borderRadius: 3,
+              border: "1px solid",
+              borderColor: "divider",
+              boxShadow: "0 4px 24px rgba(15, 23, 42, 0.05)",
+            }}
+          >
+            {roles && roles.includes("thêm tài khoản") && (
+              <Box sx={{ mb: 3 }}>
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+                  <PersonAddAltIcon color="primary" fontSize="small" />
+                  <Typography fontWeight={700} fontSize="0.95rem">
+                    Thêm tài khoản mới
+                  </Typography>
+                </Stack>
+                {isSubmitting && <LinearProgress sx={{ mb: 1.5, borderRadius: 1 }} />}
+                <Grid container spacing={1.5} alignItems="center">
+                  <Grid item xs={12} sm={4}>
+                    <TextField
+                      name="tentaikhoan"
+                      fullWidth
+                      label="Tên tài khoản"
+                      value={tentaikhoan}
+                      onChange={(e) => setTentaikhoan(e.target.value)}
+                      size="small"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={3}>
+                    <TextField
+                      name="matkhau"
+                      fullWidth
+                      label="Mật khẩu"
+                      type="password"
+                      value={matkhau}
+                      onChange={(e) => setMatkhau(e.target.value)}
+                      size="small"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={2}>
+                    <TextField
+                      name="thutu"
+                      fullWidth
+                      label="Thứ tự"
+                      value={thutu}
+                      onChange={(e) => setThutu(e.target.value)}
+                      type="number"
+                      size="small"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={3}>
+                    <Button
+                      onClick={handleSubmit}
+                      variant="contained"
+                      disabled={isSubmitting}
+                      fullWidth
+                      startIcon={<PersonAddAltIcon />}
+                      sx={{
+                        textTransform: "none",
+                        fontWeight: 600,
+                        borderRadius: 2,
+                        minHeight: 40,
+                      }}
+                    >
+                      Thêm mới
+                    </Button>
+                  </Grid>
+                </Grid>
+              </Box>
+            )}
 
-        {loading ? (
-          <div className='mt-2'>
-            <Skeleton variant="rectangular" width="100%" height="450px" />
-          </div>
-      ) : (
-        <>
-        <TableUser
-          userList={userList}
-          page={pagination.page}
-          onClickOpenDialogDelete={handleOpenDialogDelete}
-          onClickSettingRoleUser={handleSettingRoleUser}
-          userTemp={userTemp}
-        />
-        <PaginationComponent
-        page={pagination.page}
-        totalPage={pagination.total}
-        onChangePage={handleChangePage}
-      />
-        </>
-      )}
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+              sx={{ mb: 1.5 }}
+            >
+              <Typography fontWeight={700} fontSize="0.95rem" color="text.secondary">
+                Danh sách tài khoản
+              </Typography>
+              {!loading && (
+                <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                  {userList.length} tài khoản trên trang
+                </Typography>
+              )}
+            </Stack>
 
-      </div>
+            {loading ? (
+              <Skeleton variant="rounded" width="100%" height={360} sx={{ borderRadius: 2 }} />
+            ) : (
+              <>
+                <TableUser
+                  userList={userList}
+                  page={pagination.page}
+                  onClickOpenDialogDelete={handleOpenDialogDelete}
+                  onClickSettingRoleUser={handleSettingRoleUser}
+                  onClickResetPassword={handleOpenResetPassword}
+                  userTemp={userTemp}
+                />
+                <PaginationComponent
+                  page={pagination.page}
+                  totalPage={pagination.total}
+                  onChangePage={handleChangePage}
+                />
+              </>
+            )}
+          </Paper>
+        </Grid>
 
-      <div className="lg:basis-1/3 bg-white">
-          <FormAddRoleUser 
+        {/* Right: roles */}
+        <Grid item xs={12} lg={4}>
+          <FormAddRoleUser
             userTemp={userTemp}
             onHandleEditUser={handleSubmitEditUser}
+            onClearUser={() => setUserTemp(null)}
           />
-      </div>
+        </Grid>
+      </Grid>
 
       <DialogDelete
         open={openDialogDelete.status}
@@ -338,6 +429,14 @@ useEffect(() => {
         onConfirmDelete={handleConfirmDelete}
         onCancelDelete={handleCancelDelete}
       />
-    </div>
-  )
+
+      <DialogResetPassword
+        open={openDialogReset.status}
+        user={openDialogReset.user}
+        loading={resetting}
+        onClose={handleCloseResetPassword}
+        onSubmit={handleSubmitResetPassword}
+      />
+    </Box>
+  );
 }

@@ -1,6 +1,13 @@
 import React, { lazy, Suspense, useCallback, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
+import { writeSearchParams } from '../../../utils/searchParams';
 import monthiApi from '../../../api/monthiApi';
+import {
+  downloadBlobFile,
+  getBlobErrorMessage,
+  parseExportResponse,
+  waitForExportJob,
+} from '../../../utils/excelDownload';
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import dayjs from 'dayjs';
 import CustomPaginationActionsTableKetquaThi from '../components/CustomPaginationActionsTableKetquaThi';
@@ -13,11 +20,16 @@ import { API_SERVER } from '../../../api/apiServer';
 import SearchIcon from '@mui/icons-material/Search'
 import TopCauHoiSai from '../components/TopCauhoiSai';
 import { useSnackbar } from 'notistack';
+import DemographicFilters, {
+  validateDemographicAge,
+} from '../../../components/DemographicFilters';
+import ExportJobProgressDialog from '../components/ExportJobProgressDialog';
 
 const ChartResult = lazy(() => import('../components/ChartResult'));
 
 const KetquaThi = () => {
   let { id } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { enqueueSnackbar } = useSnackbar();
   const [link, setLink] = useState('');
   const [openModalLoading, setOpenModalLoading] = useState(true);
@@ -31,19 +43,27 @@ const KetquaThi = () => {
   });
 
   const [fileName, setFileName] = useState("");
+  const [exportJobOpen, setExportJobOpen] = useState(false);
+  const [exportJob, setExportJob] = useState(null);
+  const [exportJobError, setExportJobError] = useState("");
+  const [exportJobDownloading, setExportJobDownloading] = useState(false);
   const [dataKhongdat, setDataKhongdat] = useState(0);
   const [dataTrungbinh, setDataTrungbinh] = useState(0);
   const [dataKha, setDataKha] = useState(0);
   const [dataGioi, setDataGioi] = useState(0);
   const [dataXuatsac, setDataXuatsac] = useState(0);
 
-  const [tungay, setTungay] = useState("");
-  const [denngay, setDenngay] = useState("");
-  const [xeploai, setXeploai] = useState("");
-  const [hoten, setHoten] = useState("");
+  const [tungay, setTungay] = useState(() => searchParams.get("tungay") || "");
+  const [denngay, setDenngay] = useState(() => searchParams.get("denngay") || "");
+  const [xeploai, setXeploai] = useState(() => searchParams.get("xeploai") || "");
+  const [hoten, setHoten] = useState(() => searchParams.get("hoten") || "");
+  const [ageFrom, setAgeFrom] = useState(() => searchParams.get("ageFrom") || "");
+  const [ageTo, setAgeTo] = useState(() => searchParams.get("ageTo") || "");
+  const [gioitinh, setGioitinh] = useState(() => searchParams.get("gioitinh") || "");
+  const [loaixe, setLoaixe] = useState(() => searchParams.get("loaixe") || "");
 
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(20);
+  const [page, setPage] = useState(() => Number(searchParams.get("page") || 0));
+  const [rowsPerPage, setRowsPerPage] = useState(() => Number(searchParams.get("limit") || 20));
   const [total, setTotal] = useState(0);
   const [exporting, setExporting] = useState(false);
 
@@ -71,6 +91,10 @@ const KetquaThi = () => {
     denngay: denngayArg,
     xeploai: xeploaiArg,
     hoten: hotenArg,
+    ageFrom: ageFromArg,
+    ageTo: ageToArg,
+    gioitinh: gioitinhArg,
+    loaixe: loaixeArg,
     showLoading = true,
   } = {}) => {
     if (showLoading) setOpenModalLoading(true);
@@ -80,6 +104,10 @@ const KetquaThi = () => {
         denngay: denngayArg ?? denngay,
         xeploai: xeploaiArg ?? xeploai,
         hoten: hotenArg ?? hoten,
+        ageFrom: ageFromArg ?? ageFrom,
+        ageTo: ageToArg ?? ageTo,
+        gioitinh: gioitinhArg ?? gioitinh,
+        loaixe: loaixeArg ?? loaixe,
         page: (pageArg ?? page) + 1,
         limit: limitArg ?? rowsPerPage,
       });
@@ -87,7 +115,7 @@ const KetquaThi = () => {
     } finally {
       if (showLoading) setOpenModalLoading(false);
     }
-  }, [id, tungay, denngay, xeploai, hoten, page, rowsPerPage, applyResponse]);
+  }, [id, tungay, denngay, xeploai, hoten, ageFrom, ageTo, gioitinh, loaixe, page, rowsPerPage, applyResponse]);
 
   const exportToExcel = async () => {
     setExporting(true);
@@ -97,35 +125,86 @@ const KetquaThi = () => {
         denngay,
         xeploai,
         hoten,
+        ageFrom,
+        ageTo,
+        gioitinh,
+        loaixe,
       });
-      const contentType = res.headers?.["content-type"] || "";
-      if (contentType.includes("application/json")) {
-        const text = await res.data.text();
-        const parsed = JSON.parse(text);
-        throw new Error(parsed.message || "Không xuất được file Excel");
+      const parsed = await parseExportResponse(res);
+      if (parsed.type === "job") {
+        const jobId = parsed.job?.jobId || parsed.job?._id;
+        setExportJobError("");
+        setExportJob(parsed.job);
+        setExportJobOpen(true);
+        const finalJob = await waitForExportJob(
+          (jid) => monthiApi.getKetquaExportJob(jid),
+          jobId,
+          { onProgress: setExportJob }
+        );
+        setExportJob(finalJob);
+        try {
+          const dl = await monthiApi.downloadKetquaExportJob(jobId);
+          const data = dl.data;
+          if (data instanceof Blob && data.type?.includes("application/json")) {
+            const text = await data.text();
+            const parsed = JSON.parse(text);
+            throw new Error(parsed.message || "Không tải được file");
+          }
+          downloadBlobFile(
+            data,
+            finalJob?.fileName || "KetQuaThi.zip",
+            "application/zip"
+          );
+        } catch (dlErr) {
+          const message = await getBlobErrorMessage(dlErr, "Không tải được file");
+          setExportJobError(message);
+        }
+        return;
       }
-      const blob = new Blob([res.data], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
       const safe =
         (fileName || cuocthi?.tencuocthi || "export")
           .replace(/[^\w\-]+/g, "_")
           .slice(0, 60) || "export";
-      a.download = `KetQuaThi_${safe}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
+      downloadBlobFile(
+        parsed.data,
+        `KetQuaThi_${safe}.xlsx`,
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
     } catch (err) {
       console.error(err);
-      enqueueSnackbar(err?.message || "Không xuất được file Excel", {
+      const message = await getBlobErrorMessage(err);
+      setExportJobError(message);
+      enqueueSnackbar(message, {
         variant: "error",
       });
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleDownloadExportJob = async () => {
+    const jobId = exportJob?.jobId || exportJob?._id;
+    if (!jobId) return;
+    setExportJobDownloading(true);
+    try {
+      const res = await monthiApi.downloadKetquaExportJob(jobId);
+      const data = res.data;
+      if (data instanceof Blob && data.type?.includes("application/json")) {
+        const text = await data.text();
+        const parsed = JSON.parse(text);
+        throw new Error(parsed.message || "Không tải được file");
+      }
+      downloadBlobFile(
+        data,
+        exportJob?.fileName || "KetQuaThi.zip",
+        "application/zip"
+      );
+    } catch (error) {
+      const message = await getBlobErrorMessage(error, "Không tải được file");
+      setExportJobError(message);
+      enqueueSnackbar(message, { variant: "error" });
+    } finally {
+      setExportJobDownloading(false);
     }
   };
 
@@ -148,12 +227,16 @@ const KetquaThi = () => {
       setOpenModalLoading(true);
       try {
         const res = await monthiApi.getKetquaThi(id, {
-          tungay: "",
-          denngay: "",
-          xeploai: "",
-          hoten: "",
-          page: 1,
-          limit: 20,
+          tungay: searchParams.get("tungay") || "",
+          denngay: searchParams.get("denngay") || "",
+          xeploai: searchParams.get("xeploai") || "",
+          hoten: searchParams.get("hoten") || "",
+          ageFrom: searchParams.get("ageFrom") || "",
+          ageTo: searchParams.get("ageTo") || "",
+          gioitinh: searchParams.get("gioitinh") || "",
+          loaixe: searchParams.get("loaixe") || "",
+          page: Number(searchParams.get("page") || 0) + 1,
+          limit: Number(searchParams.get("limit") || 20),
         });
         applyResponse(res);
       } finally {
@@ -165,12 +248,54 @@ const KetquaThi = () => {
 
   const handleSearch = async (e) => {
     e.preventDefault();
+    const ageError = validateDemographicAge(ageFrom, ageTo);
+    if (ageError) {
+      enqueueSnackbar(ageError, { variant: "warning" });
+      return;
+    }
     setPage(0);
+    writeSearchParams(searchParams, setSearchParams, {
+      tungay, denngay, xeploai, hoten, ageFrom, ageTo, gioitinh, loaixe,
+      page: 0, limit: rowsPerPage,
+    });
     await fetchKetqua({ page: 0 });
+  };
+
+  const handleDemographicChange = (field, value) => {
+    const setters = {
+      ageFrom: setAgeFrom,
+      ageTo: setAgeTo,
+      gioitinh: setGioitinh,
+      loaixe: setLoaixe,
+    };
+    setters[field]?.(value);
+  };
+
+  const handleClearDemographics = async () => {
+    setAgeFrom("");
+    setAgeTo("");
+    setGioitinh("");
+    setLoaixe("");
+    setPage(0);
+    writeSearchParams(searchParams, setSearchParams, {
+      ageFrom: "",
+      ageTo: "",
+      gioitinh: "",
+      loaixe: "",
+      page: 0,
+    });
+    await fetchKetqua({
+      page: 0,
+      ageFrom: "",
+      ageTo: "",
+      gioitinh: "",
+      loaixe: "",
+    });
   };
 
   const handleChangePage = async (_event, newPage) => {
     setPage(newPage);
+    writeSearchParams(searchParams, setSearchParams, { page: newPage });
     await fetchKetqua({ page: newPage, showLoading: false });
   };
 
@@ -178,6 +303,7 @@ const KetquaThi = () => {
     const next = parseInt(event.target.value, 10);
     setRowsPerPage(next);
     setPage(0);
+    writeSearchParams(searchParams, setSearchParams, { page: 0, limit: next });
     await fetchKetqua({ page: 0, limit: next, showLoading: false });
   };
 
@@ -227,8 +353,16 @@ const KetquaThi = () => {
                     <p className="text-lg font-bold text-slate-800">{dayjs(cuocthi?.ngaytochucthi).format('DD/MM/YY')}</p>
                   </div>
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">Lượt thi</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Lượt thi (hệ thống)</p>
                     <p className="text-xl font-bold text-slate-800 flex items-center justify-between">{totalLuotthi} <span className='font-normal italic text-green-700 text-[12px]'>{totalNopbai} lượt nộp bài</span></p>
+                  </div>
+                  <div className="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                    <p className="text-[10px] font-bold text-blue-600 uppercase">Người tham gia (khai báo)</p>
+                    <p className="text-xl font-bold text-slate-800">{cuocthi?.tongsonguoithamgia ?? 0}</p>
+                  </div>
+                  <div className="bg-indigo-50 p-3 rounded-xl border border-indigo-100">
+                    <p className="text-[10px] font-bold text-indigo-600 uppercase">Cán bộ tuyên truyền</p>
+                    <p className="text-[11px] font-semibold text-slate-800">{cuocthi?.canbothamgiatuyentruyen ?? "Chưa có thông tin"}</p>
                   </div>
                 </div>
               </div>
@@ -279,8 +413,25 @@ const KetquaThi = () => {
           </div>
 
           <div>
-            <TopCauHoiSai idCuocThi={id} />
+            <TopCauHoiSai
+              idCuocThi={id}
+              ageFrom={searchParams.get("ageFrom") || ""}
+              ageTo={searchParams.get("ageTo") || ""}
+              gioitinh={searchParams.get("gioitinh") || ""}
+              loaixe={searchParams.get("loaixe") || ""}
+            />
           </div>
+
+          <DemographicFilters
+            idPrefix="ketqua-thi"
+            ageFrom={ageFrom}
+            ageTo={ageTo}
+            gioitinh={gioitinh}
+            loaixe={loaixe}
+            onChange={handleDemographicChange}
+            onClear={handleClearDemographics}
+            className="mb-3"
+          />
 
           <section className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
             <div className="p-6 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -366,6 +517,17 @@ const KetquaThi = () => {
         onCloseDialogPreviewBaithi={handleCloseDialogEdit}
         idBaithi={openDialogEdit.item?._id}
 
+      />
+      <ExportJobProgressDialog
+        open={exportJobOpen}
+        job={exportJob}
+        error={exportJobError}
+        downloading={exportJobDownloading}
+        onClose={() => {
+          setExportJobOpen(false);
+          setExportJobError("");
+        }}
+        onDownload={handleDownloadExportJob}
       />
     </div>
   );

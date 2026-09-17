@@ -15,12 +15,18 @@ import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined'
 import GavelOutlinedIcon from '@mui/icons-material/GavelOutlined'
+import { useSelector } from 'react-redux'
 import commonApi from '../../api/commonApi'
 import { API_SERVER } from '../../api/apiServer'
 
 const ThuvienLuat = () => {
     const ref = useRef()
-    const [text, setText] = useState('')
+    const roles = useSelector((state) => state.authReducer.roles_x01)
+    const canAdd = roles && roles.includes('thêm cẩm nang giao thông')
+    const canDelete = roles && roles.includes('xóa cẩm nang giao thông')
+    const [tieuDe, setTieuDe] = useState('')
+    const [chuThich, setChuThich] = useState('')
+    const [ghiChu, setGhiChu] = useState('')
     const [thutu, setThutu] = useState(1)
     const [file, setFile] = useState(null)
     const [list, setList] = useState([])
@@ -50,21 +56,38 @@ const ThuvienLuat = () => {
 
     const handleSaveFile = async (e) => {
         e.preventDefault()
+        if (!canAdd) {
+            alert('Tài khoản chưa có quyền "thêm cẩm nang giao thông". Vào Quản lý tài khoản để cấp quyền, rồi đăng nhập lại.')
+            return
+        }
+        if (!tieuDe.trim()) {
+            alert('Vui lòng nhập tiêu đề tài liệu')
+            return
+        }
+        if (!file) {
+            alert('Vui lòng chọn file PDF')
+            return
+        }
         const formData = new FormData()
         formData.append('file', file)
-        formData.append('text', text)
+        formData.append('tieu_de', tieuDe.trim())
+        formData.append('chu_thich', chuThich)
+        formData.append('ghi_chu', ghiChu)
         formData.append('thutu', thutu)
         setSaving(true)
         try {
             const res = await commonApi.saveFile(formData)
-            setText('')
+            setTieuDe('')
+            setChuThich('')
+            setGhiChu('')
             setThutu(1)
             setFile(null)
             if (ref.current) ref.current.value = ''
             setList(res.data)
+            alert('Lưu tài liệu thành công')
         } catch (error) {
-            alert(error.message)
-            console.log(error.message)
+            alert(error?.message || 'Upload thất bại')
+            console.log(error)
         } finally {
             setSaving(false)
         }
@@ -133,6 +156,26 @@ const ThuvienLuat = () => {
             </Paper>
 
             {/* Upload form */}
+            {!canAdd && (
+                <Paper
+                    elevation={0}
+                    sx={{
+                        p: 2,
+                        mb: 3,
+                        borderRadius: 2,
+                        border: '1px solid #fdba74',
+                        bgcolor: '#fff7ed',
+                    }}
+                >
+                    <Typography variant="body2" color="text.secondary">
+                        Tài khoản chưa có quyền <strong>thêm cẩm nang giao thông</strong>.
+                        Vào <strong>Quản lý tài khoản</strong> → Phân quyền → nhóm{' '}
+                        <strong>Cẩm nang giao thông</strong> → tick Thêm (hoặc Full),
+                        Cập nhật, rồi <strong>đăng xuất / đăng nhập lại</strong>.
+                    </Typography>
+                </Paper>
+            )}
+            {canAdd && (
             <Paper
                 elevation={0}
                 component="form"
@@ -150,18 +193,41 @@ const ThuvienLuat = () => {
                     Thêm tài liệu mới
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
-                    Nhập tên, thứ tự hiển thị và tải lên file PDF.
+                    Nhập tiêu đề, ghi chú nhóm (vd: Luật GTĐB), chú thích, thứ tự và tải lên file PDF.
                 </Typography>
 
                 <Stack spacing={2.5}>
                     <TextField
                         required
                         fullWidth
-                        label="Tên, chú thích tài liệu"
-                        value={text}
-                        onChange={(e) => setText(e.target.value)}
+                        label="Tiêu đề tài liệu"
+                        value={tieuDe}
+                        onChange={(e) => setTieuDe(e.target.value)}
                         size="small"
                         variant="outlined"
+                    />
+
+                    <TextField
+                        fullWidth
+                        label="Ghi chú (nhóm / loại)"
+                        value={ghiChu}
+                        onChange={(e) => setGhiChu(e.target.value)}
+                        size="small"
+                        variant="outlined"
+                        placeholder='Ví dụ: Luật, Luật giao thông đường bộ, Luật giao thông đường sắt...'
+                        helperText="Người dùng có thể tìm theo ghi chú này cùng với tiêu đề"
+                    />
+
+                    <TextField
+                        fullWidth
+                        label="Chú thích tài liệu"
+                        value={chuThich}
+                        onChange={(e) => setChuThich(e.target.value)}
+                        size="small"
+                        variant="outlined"
+                        multiline
+                        minRows={2}
+                        placeholder="Mô tả ngắn về nội dung tài liệu (tùy chọn)"
                     />
 
                     <TextField
@@ -254,6 +320,7 @@ const ThuvienLuat = () => {
                     </Box>
                 </Stack>
             </Paper>
+            )}
 
             {/* List */}
             <Paper
@@ -316,24 +383,43 @@ const ThuvienLuat = () => {
                                         sx={{ fontWeight: 700, minWidth: 36 }}
                                     />
                                     <PictureAsPdfOutlinedIcon color="error" fontSize="small" />
-                                    <Typography
-                                        component="a"
-                                        href={`${API_SERVER}api/uploads/${i.file}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        sx={{
-                                            color: '#ea580c',
-                                            fontWeight: 500,
-                                            textDecoration: 'none',
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis',
-                                            whiteSpace: 'nowrap',
-                                            '&:hover': { textDecoration: 'underline' },
-                                        }}
-                                    >
-                                        {i.text}
-                                    </Typography>
+                                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                                        {(i.ghi_chu || '').trim() && (
+                                            <Chip
+                                                label={i.ghi_chu}
+                                                size="small"
+                                                sx={{
+                                                    mb: 0.5,
+                                                    bgcolor: '#fff7ed',
+                                                    color: '#c2410c',
+                                                    fontWeight: 600,
+                                                    maxWidth: '100%',
+                                                }}
+                                            />
+                                        )}
+                                        <Typography
+                                            component="a"
+                                            href={`${API_SERVER}api/uploads/${i.file}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            sx={{
+                                                color: '#ea580c',
+                                                fontWeight: 600,
+                                                textDecoration: 'none',
+                                                display: 'block',
+                                                '&:hover': { textDecoration: 'underline' },
+                                            }}
+                                        >
+                                            {i.tieu_de || i.text}
+                                        </Typography>
+                                        {(i.chu_thich || '').trim() && (
+                                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+                                                {i.chu_thich}
+                                            </Typography>
+                                        )}
+                                    </Box>
                                 </Stack>
+                                {canDelete && (
                                 <IconButton
                                     aria-label="Xóa tài liệu"
                                     color="error"
@@ -347,6 +433,7 @@ const ThuvienLuat = () => {
                                 >
                                     <DeleteOutlineIcon fontSize="small" />
                                 </IconButton>
+                                )}
                             </Paper>
                         ))}
                     </Stack>

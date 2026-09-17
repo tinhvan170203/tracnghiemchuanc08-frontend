@@ -7,12 +7,8 @@ import { API_SERVER } from './apiServer.js';
 
 const axiosMulter = axios.create({
   baseURL: API_SERVER,
-  // baseURL: 'http://localhost:4000/',
-  // baseURL: 'http://localhost:4000/',
-  headers: {
-    'Content-Type': 'multipart/form-data',
-  },
   withCredentials: true, // Để request gửi kèm cookie
+  // Không set Content-Type cố định: FormData cần boundary do trình duyệt tự gắn
 });
 
 // ==============================
@@ -157,11 +153,12 @@ axiosMulter.interceptors.response.use(
       }
     }
 
-    // Forbidden
-    if (error.response?.status === 403 || error.response?.status === 401) {
-      console.log(error.response)
-      alert("Bạn không có quyền truy cập");
-
+    // Forbidden / thiếu quyền chức năng
+    if (error.response?.status === 403) {
+      const msg =
+        error.response?.data?.message || "Bạn không có quyền truy cập";
+      alert(msg);
+      return Promise.reject(error.response?.data || error);
     }
 
     return Promise.reject(error.response?.data || error);

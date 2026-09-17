@@ -4,6 +4,7 @@ import axiosMulter from "./axiosMulter";
 const knowledgeApi = {
   list: () => axiosConfig.get("api/ai-knowledge"),
   upload: (formData) => axiosMulter.post("api/ai-knowledge/upload", formData),
+  reprocess: (id) => axiosConfig.post(`api/ai-knowledge/${id}/reprocess`),
   remove: (id) => axiosConfig.delete(`api/ai-knowledge/${id}`),
 };
 

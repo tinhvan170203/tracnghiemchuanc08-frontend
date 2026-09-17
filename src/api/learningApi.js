@@ -13,6 +13,14 @@ const learningApi = {
         const url = `api/learning/chuyendes/${chuyendeId}/cauhois`;
         return axiosConfig.get(url)
     },
+    getSettings(){
+        const url = `api/learning/settings`;
+        return axiosConfig.get(url)
+    },
+    updateSettings(data){
+        const url = `api/learning/settings`;
+        return axiosConfig.put(url, data)
+    },
     // getCauhoisOfChuyende(data){
     //     const url =`api/learning/edit/${data.id_edit}`;
     //     return axiosConfig.put(url, data)

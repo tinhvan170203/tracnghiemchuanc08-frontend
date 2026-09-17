@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import PaginationComponent from "../../components/PaginationComponent";
-import { Button, Grid, Skeleton, TextField } from "@mui/material";
+import { Button, FormControlLabel, Grid, Skeleton, Switch } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { InputField } from "../../components/form-control/InputField";
 import { useForm } from "react-hook-form";
@@ -16,6 +16,7 @@ import DialogAddMonthi from "./components/DialogAddMonthi";
 import TableMonthi from "./components/TableMonthi";
 import DialogEditMonthi from "./components/DialogEditMonthi";
 import monthiApi from "../../api/monthiApi";
+import learningApi from "../../api/learningApi";
 
 const Monthi = () => {
   // state phân trang
@@ -28,6 +29,7 @@ const Monthi = () => {
   const navigate = useNavigate()
   const [tongbanghi, setTongbanghi] = useState(0);
   const [donviList, setDonviList] = useState([]);
+  const [choPhepHocCauhoi, setChoPhepHocCauhoi] = useState(true);
 
   const queryParams = useMemo(() => {
     const params = querystring.parse(location.search);
@@ -44,6 +46,7 @@ const Monthi = () => {
     status: false,
     id_Delete: null,
   });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [openDialogEditDonvi, setOpenDialogEditDonvi] = useState({
     status: false,
@@ -135,6 +138,18 @@ const Monthi = () => {
     fetchData();
   }, [queryParams]);
 
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const res = await learningApi.getSettings();
+        setChoPhepHocCauhoi(!!res.data.cho_phep_hoc_cauhoi);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    loadSettings();
+  }, []);
+
   //handle thêm mới đơn vị
   const handleSubmitAddDonvi = async (values) => {
     try {
@@ -213,6 +228,7 @@ const Monthi = () => {
   };
 
   const handleCloseDialogDelete = () => {
+    if (isDeleting) return;
     setOpenDialogDelete({
       ...openDialogDelete,
       status: false,
@@ -259,7 +275,46 @@ const Monthi = () => {
     }
   };
 
+  const handleToggleHoctap = async (donvi, checked) => {
+    try {
+      const res = await monthiApi.editMonthi({
+        id_edit: donvi._id,
+        tenmonthi: donvi.tenmonthi,
+        mota: donvi.mota,
+        thutu: donvi.thutu,
+        link_test: donvi.link_test,
+        hien_thi_hoctap: checked,
+        queryParams,
+      });
+      setDonviList(res.data.donvis);
+    } catch (error) {
+      enqueueSnackbar(error.message, {
+        anchorOrigin: { vertical: "bottom", horizontal: "right" },
+        variant: "error",
+      });
+    }
+  };
+
+  const handleToggleChoPhepHoc = async (e) => {
+    const checked = e.target.checked;
+    try {
+      const res = await learningApi.updateSettings({ cho_phep_hoc_cauhoi: checked });
+      setChoPhepHocCauhoi(!!res.data.cho_phep_hoc_cauhoi);
+      enqueueSnackbar(res.data.message || "Cập nhật thành công", {
+        anchorOrigin: { vertical: "bottom", horizontal: "right" },
+        variant: "success",
+      });
+    } catch (error) {
+      enqueueSnackbar(error.message, {
+        anchorOrigin: { vertical: "bottom", horizontal: "right" },
+        variant: "error",
+      });
+    }
+  };
+
   const handleConfirmDelete = async () => {
+    if (isDeleting || !openDialogDelete.id_Delete) return;
+    setIsDeleting(true);
     try {
       let res = await monthiApi.deleteMonthi(openDialogDelete.id_Delete, queryParams );
       setDonviList(res.data.donvis)
@@ -307,10 +362,13 @@ const Monthi = () => {
         },
         variant: "error",
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   const handleCancelDelete = () => {
+    if (isDeleting) return;
     setOpenDialogDelete({
       ...openDialogDelete,
       status: false,
@@ -319,9 +377,30 @@ const Monthi = () => {
   
   return (
     <div className="mx-2 bg-white pb-2 px-4">
-      <h3 className="text-gray-900 text-center mt-2 pt-4 font-bold sm:text-[14px] md:text-[18px]">
+      {/* <h3 className="text-gray-900 text-center mt-2 pt-4 font-bold sm:text-[14px] md:text-[18px]">
         Quản lý kiến thức đánh giá
-      </h3>
+      </h3> */}
+
+      {!openModalLoading && tongbanghi === 0 && (
+        <p className="text-sm text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 mb-3 mt-2">
+          Không có kiến thức đánh giá trong phạm vi được phân quyền. Liên hệ quản trị viên (mục Phân quyền QL kiến thức đánh giá) nếu cần thêm quyền quản lý.
+        </p>
+      )}
+
+      {roles && roles.includes("sửa môn thi") && (
+        <div className="flex justify-end px-2">
+          <FormControlLabel
+            control={
+              <Switch
+                checked={choPhepHocCauhoi}
+                onChange={handleToggleChoPhepHoc}
+                color="success"
+              />
+            }
+            label="Cho phép học câu hỏi trên trang tự học"
+          />
+        </div>
+      )}
 
       <div className="p-2 rounded-md shadow-lg">
         <form
@@ -402,6 +481,7 @@ const Monthi = () => {
             page={pagination.page}
             onClickOpenDialogDelete={handleOpenDialogDelete}
             onClickOpenDialogEditDonvi={handleOpenDialogEditDonvi}
+            onToggleHoctap={handleToggleHoctap}
             tongbanghi={tongbanghi}
           />
         )}
@@ -420,13 +500,12 @@ const Monthi = () => {
         onSubmit={handleSubmitEditDonvi}
       />
 
-      {/* <ModalLoading open={openModalLoading} /> */}
-
       <DialogDelete
         open={openDialogDelete.status}
         onCloseDialogDelete={handleCloseDialogDelete}
         onConfirmDelete={handleConfirmDelete}
         onCancelDelete={handleCancelDelete}
+        loading={isDeleting}
       />
 
       <PaginationComponent

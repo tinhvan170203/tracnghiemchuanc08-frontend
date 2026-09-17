@@ -1,15 +1,10 @@
 import React, { useCallback } from "react";
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Paper,
-} from "@mui/material";
+import { Box, Typography, Paper, Stack } from "@mui/material";
 import VideoThumb from "./VideoThumb";
 
 const VideoListItem = React.memo(function VideoListItem({
   item,
+  index,
   isSelected,
   onSelect,
 }) {
@@ -17,112 +12,169 @@ const VideoListItem = React.memo(function VideoListItem({
     onSelect(item);
   }, [item, onSelect]);
 
+  const handleKeyDown = useCallback(
+    (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        onSelect(item);
+      }
+    },
+    [item, onSelect]
+  );
+
   return (
-    <Card
+    <Box
+      component="button"
+      type="button"
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
       sx={{
         display: "flex",
+        width: "100%",
+        textAlign: "left",
+        gap: 1.25,
+        p: 1.25,
         cursor: "pointer",
-        transition: "all 0.2s ease-in-out",
-        border: isSelected ? "2px solid #2563eb" : "1px solid #e2e8f0",
-        bgcolor: isSelected ? "#eff6ff" : "#ffffff",
+        borderRadius: 2,
+        border: isSelected ? "2px solid #ea580c" : "1px solid #fed7aa",
+        bgcolor: isSelected ? "#fff7ed" : "#ffffff",
+        transition: "border-color 0.2s, box-shadow 0.2s, transform 0.15s",
+        boxShadow: isSelected ? "0 4px 14px rgba(234, 88, 12, 0.12)" : "none",
         "&:hover": {
-          boxShadow: 2,
+          borderColor: "#fb923c",
+          boxShadow: "0 4px 12px rgba(15, 23, 42, 0.06)",
+          transform: "translateY(-1px)",
+        },
+        "&:focus-visible": {
+          outline: "2px solid #ea580c",
+          outlineOffset: 2,
         },
       }}
     >
-      <VideoThumb isSelected={isSelected} />
+      <VideoThumb isSelected={isSelected} order={item.thutu ?? index + 1} />
 
-      <CardContent
-        sx={{
-          p: 1.25,
-          "&:last-child": { pb: 1.25 },
-          flex: 1,
-          overflow: "hidden",
-        }}
-      >
+      <Box sx={{ flex: 1, minWidth: 0, py: 0.25 }}>
         <Typography
-          variant="subtitle2"
           sx={{
-            fontWeight: "bold",
-            color: isSelected ? "#1d4ed8" : "#1e293b",
+            fontWeight: 700,
+            color: isSelected ? "#c2410c" : "#1e293b",
+            fontSize: { xs: "0.9rem", sm: "0.95rem" },
+            lineHeight: 1.35,
             display: "-webkit-box",
             WebkitLineClamp: 2,
             WebkitBoxOrient: "vertical",
             overflow: "hidden",
-            fontSize: { xs: "0.85rem", sm: "0.875rem" },
           }}
-          className="!text-[12px]"
         >
           {item.name}
         </Typography>
 
-        <Typography
-          variant="caption"
-          color="text.secondary"
-          display="block"
-          sx={{
-            mt: 0.5,
-            whiteSpace: "pre-line",
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-          }}
-          className="!text-[11px]"
-        >
-          {item.mota}
-        </Typography>
-      </CardContent>
-    </Card>
+        {(item.mota || "").trim() ? (
+          <Typography
+            sx={{
+              mt: 0.5,
+              color: "#64748b",
+              fontSize: "0.78rem",
+              lineHeight: 1.45,
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+              whiteSpace: "pre-line",
+            }}
+          >
+            {item.mota}
+          </Typography>
+        ) : null}
+
+        {typeof item.totalView === "number" ? (
+          <Typography
+            sx={{
+              mt: 0.75,
+              fontSize: "0.72rem",
+              fontWeight: 600,
+              color: "#94a3b8",
+            }}
+          >
+            {item.totalView} lượt xem
+          </Typography>
+        ) : null}
+      </Box>
+    </Box>
   );
 });
 
-function VideoSidebarList({ videoList, selectedId, onSelect }) {
+function VideoSidebarList({
+  videoList,
+  totalCount,
+  selectedId,
+  onSelect,
+  searchActive,
+}) {
   return (
     <Paper
-      elevation={3}
+      elevation={0}
       sx={{
-        p: 2,
+        p: { xs: 1.5, sm: 2 },
         borderRadius: 3,
-        // Mobile + desktop: list scrolls in its own panel so sticky player
-        // does not fight page scroll (YouTube-like sidebar behavior).
+        border: "1px solid #fed7aa",
+        bgcolor: "#fff",
+        boxShadow: "0 8px 28px rgba(234, 88, 12, 0.06)",
+        // Mobile: cuộn cả trang (để player sticky). Desktop: sidebar cuộn riêng.
         maxHeight: {
-          xs: "min(55vh, 420px)",
+          xs: "none",
           lg: "calc(100vh - 32px)",
         },
-        overflowY: "auto",
+        overflowY: { xs: "visible", lg: "auto" },
         WebkitOverflowScrolling: "touch",
-        "&::-webkit-scrollbar": {
-          width: "6px",
-        },
+        overscrollBehavior: { lg: "contain" },
+        "&::-webkit-scrollbar": { width: "6px" },
         "&::-webkit-scrollbar-thumb": {
-          backgroundColor: "#cbd5e1",
+          backgroundColor: "#fdba74",
           borderRadius: "4px",
         },
         "&::-webkit-scrollbar-thumb:hover": {
-          backgroundColor: "#94a3b8",
+          backgroundColor: "#fb923c",
         },
       }}
     >
-      <Typography
-        variant="h6"
-        className="!text-[14px]"
-        sx={{ fontWeight: "bold", mb: 2, color: "#0f172a" }}
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="space-between"
+        sx={{ mb: 1.5 }}
       >
-        Video tuyên truyền ({videoList.length})
-      </Typography>
+        <Typography fontWeight={800} sx={{ color: "#9a3412", fontSize: "0.95rem" }}>
+          Danh sách video
+        </Typography>
+        <Typography variant="caption" fontWeight={700} color="text.secondary">
+          {searchActive
+            ? `${videoList.length}/${totalCount}`
+            : `${videoList.length} video`}
+        </Typography>
+      </Stack>
 
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-        {videoList.map((item) => (
-          <VideoListItem
-            key={item._id}
-            item={item}
-            isSelected={selectedId === item._id}
-            onSelect={onSelect}
-          />
-        ))}
-      </Box>
+      {videoList.length === 0 ? (
+        <Box sx={{ py: 5, textAlign: "center" }}>
+          <Typography variant="body2" color="text.secondary">
+            {searchActive
+              ? "Không tìm thấy video phù hợp."
+              : "Chưa có video tuyên truyền."}
+          </Typography>
+        </Box>
+      ) : (
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
+          {videoList.map((item, index) => (
+            <VideoListItem
+              key={item._id}
+              item={item}
+              index={index}
+              isSelected={selectedId === item._id}
+              onSelect={onSelect}
+            />
+          ))}
+        </Box>
+      )}
     </Paper>
   );
 }
@@ -131,7 +183,9 @@ function listEqual(prev, next) {
   return (
     prev.selectedId === next.selectedId &&
     prev.onSelect === next.onSelect &&
-    prev.videoList === next.videoList
+    prev.videoList === next.videoList &&
+    prev.totalCount === next.totalCount &&
+    prev.searchActive === next.searchActive
   );
 }
 

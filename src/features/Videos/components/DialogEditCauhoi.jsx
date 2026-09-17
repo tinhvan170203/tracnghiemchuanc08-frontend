@@ -7,7 +7,7 @@ import Slide from "@mui/material/Slide";
 import AutoAwesomeMotionIcon from "@mui/icons-material/AutoAwesomeMotion";
 import CheckIcon from "@mui/icons-material/Check";
 import CancelIcon from "@mui/icons-material/Cancel";
-import { Box, Button, Grid, IconButton, LinearProgress, styled, Typography } from "@mui/material";
+import { Box, Button, Checkbox, FormControlLabel, Grid, IconButton, LinearProgress, styled, Typography } from "@mui/material";
 import { InputField } from "../../../components/form-control/InputField";
 import * as yup from "yup";
 import { useForm } from "react-hook-form";
@@ -54,7 +54,8 @@ export default function DialogEditCauhoi({
     defaultValues: {
       name: "",
       mota: "",
-      thutu: 1
+      thutu: 1,
+      active: true
     },
     resolver: yupResolver(schema),
   });
@@ -67,6 +68,7 @@ export default function DialogEditCauhoi({
       setValue("mota", item.mota);
       setValue("name", item.name, { shouldValidate: true });
       setValue("thutu", item.thutu, { shouldValidate: true });
+      setValue("active", item.active !== false);
     }
   }, [item]);
 
@@ -146,6 +148,17 @@ export default function DialogEditCauhoi({
                     label="Thứ tự xuất hiện"
                     type="text"
                     disabled={false}
+                  />
+                </Grid>
+                <Grid item xs={12} md={12} lg={12}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={watch("active") !== false}
+                        onChange={(e) => setValue("active", e.target.checked)}
+                      />
+                    }
+                    label="Hiển thị trên trang người tham gia"
                   />
                 </Grid>
               </Grid>

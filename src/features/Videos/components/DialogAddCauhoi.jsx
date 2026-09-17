@@ -57,7 +57,8 @@ export default function DialogAddCauhoi({
       mota: "",
       thutu: 1,
       is_source_link_orther: false,
-      link_orther: ""
+      link_orther: "",
+      active: true
     },
     resolver: yupResolver(schema),
   });
@@ -74,6 +75,7 @@ export default function DialogAddCauhoi({
       formData.append('thutu', values.thutu);
       formData.append('is_source_link_orther', values.is_source_link_orther);
       formData.append('link_orther', values.link_orther);
+      formData.append('active', values.active !== false ? 'true' : 'false');
 
       if (file) {
         formData.append("file", file);
@@ -188,6 +190,20 @@ export default function DialogAddCauhoi({
                     type="text"
                     disabled={false}
                   />
+                </Grid>
+                <Grid item xs={12} md={12} lg={12}>
+                  <div className="flex items-center space-x-2">
+                    <label htmlFor="video_active_add" className="text-[13px] font-semibold">
+                      Hiển thị trên trang người tham gia
+                    </label>
+                    <input
+                      id="video_active_add"
+                      type="checkbox"
+                      className="w-4 h-4"
+                      checked={watch("active") !== false}
+                      onChange={(e) => setValue("active", e.target.checked)}
+                    />
+                  </div>
                 </Grid>
                 <Grid item xs={12} md={12} lg={12}>
                   <div className="flex items-center space-x-2">

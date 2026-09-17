@@ -25,6 +25,14 @@ const monthiApi = {
         const url = `api/mon-thi/fetch-monthiOfUser`;
         return axiosConfig.get(url)
     },
+    getContestScopeOptions(){
+        const url = `api/mon-thi/contest-scope-options`;
+        return axiosConfig.get(url)
+    },
+    assignCuocthiOwner(id_monthi, id_cuocthi, data){
+        const url = `api/mon-thi/${id_monthi}/cuoc-thi/${id_cuocthi}/assign-owner`;
+        return axiosConfig.put(url, data)
+    },
 
     addCuocthi(id,data){
         const url = `api/mon-thi/${id}/cuoc-thi/add`;
@@ -52,7 +60,34 @@ const monthiApi = {
     },
     exportKetquaExcel(id, params){
         const url = `/api/mon-thi/ket-qua/cuoc-thi/${id}/export-excel`;
-        return axiosConfig.get(url, { params, responseType: "blob" });
+        return axiosConfig.get(url, {
+          params,
+          responseType: "blob",
+          timeout: 10 * 60 * 1000,
+        });
+    },
+    exportKetquaExcelNhieu(params){
+        const url = `/api/mon-thi/ket-qua/export-excel`;
+        return axiosConfig.get(url, {
+          params,
+          responseType: "blob",
+          timeout: 10 * 60 * 1000,
+        });
+    },
+    createKetquaExportJob(data){
+        const url = `/api/mon-thi/ket-qua/export-jobs`;
+        return axiosConfig.post(url, data, { timeout: 60 * 1000 });
+    },
+    getKetquaExportJob(id){
+        const url = `/api/mon-thi/ket-qua/export-jobs/${id}`;
+        return axiosConfig.get(url, { timeout: 60 * 1000 });
+    },
+    downloadKetquaExportJob(id){
+        const url = `/api/mon-thi/ket-qua/export-jobs/${id}/download`;
+        return axiosConfig.get(url, {
+          responseType: "blob",
+          timeout: 10 * 60 * 1000,
+        });
     },
 
 
@@ -95,6 +130,30 @@ const monthiApi = {
       thongkeCauhoiSai(params){
         const url = `api/mon-thi/top-cau-hoi-sai`;
         return axiosConfig.get(url, {params})
+    },
+      thongkeCauhoiSaiTonghop(params){
+        const url = `api/mon-thi/thongke-cau-hoi-sai`;
+        return axiosConfig.get(url, {params})
+    },
+    listFanpageClicks(params) {
+        const url = `api/mon-thi/fanpage-clicks`;
+        return axiosConfig.get(url, { params });
+    },
+    listFanpageCuocthiOptions(params) {
+        const url = `api/mon-thi/fanpage-clicks/cuocthi-options`;
+        return axiosConfig.get(url, { params });
+    },
+    exportFanpageClicksExcel(params) {
+        const url = `api/mon-thi/fanpage-clicks/export-excel`;
+        return axiosConfig.get(url, { params, responseType: "blob" });
+    },
+    listAiChatLogs(params) {
+        const url = `api/mon-thi/ai-chat-logs`;
+        return axiosConfig.get(url, { params });
+    },
+    exportAiChatLogsExcel(params) {
+        const url = `api/mon-thi/ai-chat-logs/export-excel`;
+        return axiosConfig.get(url, { params, responseType: "blob" });
     },
 };
 

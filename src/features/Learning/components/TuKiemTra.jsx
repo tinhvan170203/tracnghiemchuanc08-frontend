@@ -33,6 +33,20 @@ export default function TuKiemTra() {
     try {
       let res = await commonApi.loginTest(data);
       localStorage.setItem("thongtin_doituong_tuhoc", JSON.stringify(data));
+      localStorage.setItem(
+        "thongtin_doituong",
+        JSON.stringify({
+          name: data.name,
+          phone: data.phone,
+          birthday: data.birthday,
+          donvi: data.donvi,
+          hokhau: data.hokhau,
+          gioitinh: data.gioitinh,
+          loaixe: data.loaixe,
+          hang_gplx: data.hang_gplx,
+          nghenghiep: data.nghenghiep,
+        })
+      );
       localStorage.setItem("thongtinthisinh", JSON.stringify(res.data.item));
       saveEncryptedExam(res.data.questionsSendClient, res.data.secretKey);
       localStorage.setItem("thongtinbaithi", JSON.stringify(res.data.cuocthi));
@@ -62,7 +76,8 @@ export default function TuKiemTra() {
       thisinh.hang_gplx &&
       thisinh.nghenghiep &&
       thisinh.donvi &&
-      thisinh.phone;
+      thisinh.phone &&
+      thisinh.hokhau;
 
     if (hasFullInfo) {
       handleSubmitForm({

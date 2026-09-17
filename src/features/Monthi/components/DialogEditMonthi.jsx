@@ -6,7 +6,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import Slide from "@mui/material/Slide";
 import AutoAwesomeMotionIcon from "@mui/icons-material/AutoAwesomeMotion";
 import CancelIcon from "@mui/icons-material/Cancel";
-import { Box, Button, Grid, IconButton, LinearProgress, styled, Typography } from "@mui/material";
+import { Box, Button, Checkbox, FormControlLabel, Grid, IconButton, LinearProgress, styled, Typography } from "@mui/material";
 import { InputField } from "../../../components/form-control/InputField";
 import * as yup from "yup";
 import { useForm } from "react-hook-form";
@@ -48,6 +48,7 @@ export default function DialogEditMonthi({
       tenmonthi: "",
       mota: "",
       thutu: 1,
+      hien_thi_hoctap: false,
     },
     resolver: yupResolver(schema),
   });
@@ -60,6 +61,7 @@ export default function DialogEditMonthi({
       setValue("thutu", donvi.thutu, { shouldValidate: true });
       setValue("mota", donvi.mota, { shouldValidate: true });
       setValue("link_test", donvi.link_test);
+      setValue("hien_thi_hoctap", !!donvi.hien_thi_hoctap);
     }
   }, [donvi]);
 
@@ -149,6 +151,17 @@ export default function DialogEditMonthi({
                     label="Id cuộc thi để tự kiểm tra đánh giá kiến thức tổng hợp"
                     type="text"
                     disabled={false}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6} lg={6}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={!!form.watch("hien_thi_hoctap")}
+                        onChange={(e) => form.setValue("hien_thi_hoctap", e.target.checked)}
+                      />
+                    }
+                    label="Hiện trên trang tự học"
                   />
                 </Grid>
               </Grid>

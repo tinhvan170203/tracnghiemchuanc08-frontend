@@ -19,7 +19,31 @@ const apiApi = {
     },
     thongkeToanquoc(params){
          const url = `/api/toan-quoc`;
-        return axiosConfig.get(url, {params})
+        return axiosConfig.get(url, {
+            params,
+            paramsSerializer: {
+                indexes: null,
+            },
+        })
+    },
+    fetchFanpageToanquoc(params){
+        const url = `/api/toan-quoc/fanpage`;
+        return axiosConfig.get(url, {
+            params,
+            paramsSerializer: {
+                // list=a&list=b — Express nhận mảng đúng
+                indexes: null,
+            },
+        })
+    },
+    fetchAiChatToanquoc(params){
+        const url = `/api/toan-quoc/ai-chat`;
+        return axiosConfig.get(url, {
+            params,
+            paramsSerializer: {
+                indexes: null,
+            },
+        })
     }
 };
 

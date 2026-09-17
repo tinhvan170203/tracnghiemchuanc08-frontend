@@ -10,11 +10,25 @@ import MenuIcon from "@mui/icons-material/Menu";
 import { NavLink } from "react-router-dom";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import { useDispatch, useSelector } from "react-redux";
-import LocalPoliceIcon from "@mui/icons-material/LocalPolice";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
+import CategoryIcon from "@mui/icons-material/Category";
 import MilitaryTechIcon from "@mui/icons-material/MilitaryTech";
+import QuizIcon from "@mui/icons-material/Quiz";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import BarChartIcon from "@mui/icons-material/BarChart";
+import ReportProblemIcon from "@mui/icons-material/ReportProblem";
+import LanguageIcon from "@mui/icons-material/Language";
+import PublicIcon from "@mui/icons-material/Public";
+import OndemandVideoIcon from "@mui/icons-material/OndemandVideo";
+import AutoStoriesIcon from "@mui/icons-material/AutoStories";
+import SmartToyIcon from "@mui/icons-material/SmartToy";
+import FacebookIcon from "@mui/icons-material/Facebook";
+import ForumIcon from "@mui/icons-material/Forum";
+import TravelExploreIcon from "@mui/icons-material/TravelExplore";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { useSnackbar } from "notistack";
 import LogoutIcon from "@mui/icons-material/Logout";
+import SiteFooter from "../SiteFooter";
 import { fetchCurrentUser, logoutAccount } from "../../auth/authSlice";
 import { unwrapResult } from "@reduxjs/toolkit";
 import { HEADER_2 } from "../../../constant/constant";
@@ -104,7 +118,7 @@ export default function AdminDarboard() {
   };
 
   return (
-    <div className="bg-gray-300">
+    <div className="bg-white min-h-screen">
       <Box sx={{ flexGrow: 1 }}>
         <AppBar position="static">
           <Toolbar>
@@ -121,12 +135,10 @@ export default function AdminDarboard() {
 
             <p className="flex-grow">
               <span className="md:inline text-[7px] md:text-[14px] hidden uppercase">
-                Tuyên truyền, đánh giá nhận thức pháp luật về Trật tự an toàn
-                giao thông
+               Tuyên truyền, đánh giá nhận thức, kiến thức pháp luật về trật tự, an toàn giao thông
               </span>
               <span className="md:hidden text-[8px] md:text-[14px] uppercase">
-                 Tuyên truyền, đánh giá nhận thức pháp luật về Trật tự an toàn
-                giao thông
+                Tuyên truyền, đánh giá nhận thức, kiến thức pháp luật về trật tự, an toàn giao thông
               </span>
             </p>
 
@@ -169,20 +181,20 @@ export default function AdminDarboard() {
                   style={({ isActive }) => (isActive ? activeStyle : undefined)}
                 >
                   <div className="flex items-center space-x-2">
-                    <LocalPoliceIcon color="primary" />
+                    <MenuBookIcon color="primary" />
                     <span>Quản lý kiến thức đánh giá</span>
                   </div>
                 </NavLink>
               </li>
             )}
-            {roles && roles.includes("xem môn thi") && (
+            {roles && roles.includes("xem chuyên đề") && (
               <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
                 <NavLink
                   to="/admin/mon-thi/chuyen-de"
                   style={({ isActive }) => (isActive ? activeStyle : undefined)}
                 >
                   <div className="flex items-center space-x-2">
-                    <LocalPoliceIcon color="primary" />
+                    <CategoryIcon color="primary" />
                     <span>Quản lý chuyên đề đánh giá</span>
                   </div>
                 </NavLink>
@@ -208,7 +220,7 @@ export default function AdminDarboard() {
                   style={({ isActive }) => (isActive ? activeStyle : undefined)}
                 >
                   <div className="flex items-center space-x-2">
-                    <LocalPoliceIcon color="primary" />
+                    <QuizIcon color="primary" />
                     <span>Ngân hàng câu hỏi</span>
                   </div>
                 </NavLink>
@@ -225,11 +237,63 @@ export default function AdminDarboard() {
                     }
                   >
                     <div className="flex items-center space-x-2">
-                      <LocalPoliceIcon color="primary" />
+                      <EmojiEventsIcon color="primary" />
                       <span>Quản lý cuộc đánh giá</span>
                     </div>
                   </NavLink>
                 </li>
+                <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
+                  <NavLink
+                    to="/admin/fanpage-clicks"
+                    style={({ isActive }) =>
+                      isActive ? activeStyle : undefined
+                    }
+                  >
+                    <div className="flex items-center space-x-2">
+                      <FacebookIcon color="primary" />
+                      <span>Lượt theo dõi fanpage</span>
+                    </div>
+                  </NavLink>
+                </li>
+                <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
+                  <NavLink
+                    to="/admin/fanpage-toan-quoc"
+                    style={({ isActive }) =>
+                      isActive ? activeStyle : undefined
+                    }
+                  >
+                    <div className="flex items-center space-x-2">
+                      <PublicIcon color="primary" />
+                      <span>Fanpage toàn quốc</span>
+                    </div>
+                  </NavLink>
+                </li>
+                <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
+                  <NavLink
+                    to="/admin/ai-chat-logs"
+                    style={({ isActive }) =>
+                      isActive ? activeStyle : undefined
+                    }
+                  >
+                    <div className="flex items-center space-x-2">
+                      <ForumIcon color="primary" />
+                      <span>Hỏi đáp AI</span>
+                    </div>
+                  </NavLink>
+                </li>
+                {/* <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
+                  <NavLink
+                    to="/admin/ai-chat-toan-quoc"
+                    style={({ isActive }) =>
+                      isActive ? activeStyle : undefined
+                    }
+                  >
+                    <div className="flex items-center space-x-2">
+                      <TravelExploreIcon color="primary" />
+                      <span>Hỏi đáp AI toàn quốc</span>
+                    </div>
+                  </NavLink>
+                </li> */}
                 <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
                   <NavLink
                     to="/admin/thongke"
@@ -238,8 +302,21 @@ export default function AdminDarboard() {
                     }
                   >
                     <div className="flex items-center space-x-2">
-                      <LocalPoliceIcon color="primary" />
+                      <BarChartIcon color="primary" />
                       <span>Thống kê hệ thống</span>
+                    </div>
+                  </NavLink>
+                </li>
+                <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
+                  <NavLink
+                    to="/admin/thong-ke-cau-hoi-sai"
+                    style={({ isActive }) =>
+                      isActive ? activeStyle : undefined
+                    }
+                  >
+                    <div className="flex items-center space-x-2">
+                      <ReportProblemIcon color="primary" />
+                      <span>Câu hỏi hay sai</span>
                     </div>
                   </NavLink>
                 </li>
@@ -251,7 +328,7 @@ export default function AdminDarboard() {
                     }
                   >
                     <div className="flex items-center space-x-2">
-                      <LocalPoliceIcon color="primary" />
+                      <LanguageIcon color="primary" />
                       <span>Quản lý domain địa phương</span>
                     </div>
                   </NavLink>
@@ -264,51 +341,58 @@ export default function AdminDarboard() {
                     }
                   >
                     <div className="flex items-center space-x-2">
-                      <LocalPoliceIcon color="primary" />
+                      <PublicIcon color="primary" />
                       <span>Thống kê kết quả toàn quốc</span>
                     </div>
                   </NavLink>
                 </li>
-                <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
-                  <NavLink
-                    to="/admin/video"
-                    style={({ isActive }) =>
-                      isActive ? activeStyle : undefined
-                    }
-                  >
-                    <div className="flex items-center space-x-2">
-                      <LocalPoliceIcon color="primary" />
-                      <span>Quản lý video tuyên truyền</span>
-                    </div>
-                  </NavLink>
-                </li>
-                <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
-                  <NavLink
-                    to="/admin/thu-vien-luat"
-                    style={({ isActive }) =>
-                      isActive ? activeStyle : undefined
-                    }
-                  >
-                    <div className="flex items-center space-x-2">
-                      <LocalPoliceIcon color="primary" />
-                      <span>Cẩm nang an toàn giao thông</span>
-                    </div>
-                  </NavLink>
-                </li>
-                <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
-                  <NavLink
-                    to="/admin/ai-knowledge"
-                    style={({ isActive }) =>
-                      isActive ? activeStyle : undefined
-                    }
-                  >
-                    <div className="flex items-center space-x-2">
-                      <LocalPoliceIcon color="primary" />
-                      <span>Tài liệu kiến thức AI</span>
-                    </div>
-                  </NavLink>
-                </li>
               </>
+            )}
+
+            {roles && roles.includes("xem video tuyên truyền") && (
+              <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
+                <NavLink
+                  to="/admin/video"
+                  style={({ isActive }) =>
+                    isActive ? activeStyle : undefined
+                  }
+                >
+                  <div className="flex items-center space-x-2">
+                    <OndemandVideoIcon color="primary" />
+                    <span>Quản lý video tuyên truyền</span>
+                  </div>
+                </NavLink>
+              </li>
+            )}
+            {roles && roles.includes("xem cẩm nang giao thông") && (
+              <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
+                <NavLink
+                  to="/admin/thu-vien-luat"
+                  style={({ isActive }) =>
+                    isActive ? activeStyle : undefined
+                  }
+                >
+                  <div className="flex items-center space-x-2">
+                    <AutoStoriesIcon color="primary" />
+                    <span>Cẩm nang an toàn giao thông</span>
+                  </div>
+                </NavLink>
+              </li>
+            )}
+            {roles && roles.includes("xem tài liệu AI") && (
+              <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
+                <NavLink
+                  to="/admin/ai-knowledge"
+                  style={({ isActive }) =>
+                    isActive ? activeStyle : undefined
+                  }
+                >
+                  <div className="flex items-center space-x-2">
+                    <SmartToyIcon color="primary" />
+                    <span>Tài liệu kiến thức AI</span>
+                  </div>
+                </NavLink>
+              </li>
             )}
 
             <li
@@ -330,16 +414,7 @@ export default function AdminDarboard() {
         <Outlet />
       </Box>
 
-      <div className="bg-[#1976d2] py-4 pl-4 mb-2 text-center text-white text-sm mx-2 mr-2 p-2 border-t-black border-t-[1px] shadow-md">
-        <div className="flex items-center justify-center">
-          <img src="/logoc08.png" className="w-12" />
-        </div>
-        <p className="text-center  font-semibold uppercase text-[12px]">Cục Cảnh sát giao thông và Công an tỉnh Hưng Yên phối hợp thực hiện</p>
-        <h5 className="font-light">
-          Ứng dụng công nghệ thông tin trong công tác tuyên truyền, phổ biến,
-          giáo dục pháp luật về trật tự an toàn giao thông
-        </h5>
-      </div>
+      <SiteFooter variant="admin" />
     </div>
   );
 }

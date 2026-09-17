@@ -30,6 +30,10 @@ const userApi = {
         const url =`api/auth/users/edit/${data.id_edit}`;
         return axiosConfig.put(url, data)
     },
+    resetPassword(id, data){
+        const url = `api/auth/users/reset-password/${id}`;
+        return axiosConfig.put(url, data)
+    },
     deleteUser(id){
         const url = `api/auth/users/delete/${id}`;
         return axiosConfig.delete(url)

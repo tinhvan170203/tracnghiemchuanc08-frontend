@@ -10,24 +10,29 @@ const videoApi = {
         const url = `/api/video/tang-view`;
         return axiosConfig.get(url, {params})
     },
-   addVideo(data, onProgress) {
+   addVideo(data, onProgress, params = {}) {
         const url = "/api/video/add";
         return axiosMulter.post(url, data, {
+            params,
             onUploadProgress: (progressEvent) => {
                 if (progressEvent.total && onProgress) {
                     const percent = Math.round(
                         (progressEvent.loaded * 100) / progressEvent.total
                     );
-                    onProgress(percent); // Bắn % về cho Component
+                    onProgress(percent);
                 }
             }
         });
     },
-    editVideo(data){
+    editVideo(data, params = {}){
         const url =`/api/video/edit/${data.id_edit}`;
-        return axiosConfig.put(url, data)
+        return axiosConfig.put(url, data, { params })
     },
-    deleteVideo(id,params){
+    setActive(id, data){
+        const url = `/api/video/${id}/active`;
+        return axiosConfig.put(url, data);
+    },
+    deleteVideo(id, params){
         const url = `/api/video/delete/${id}`;
         return axiosConfig.delete(url, {params})
     }

@@ -7,7 +7,8 @@ import Slide from "@mui/material/Slide";
 import AutoAwesomeMotionIcon from "@mui/icons-material/AutoAwesomeMotion";
 
 import CancelIcon from "@mui/icons-material/Cancel";
-import { Box, Button, Grid, IconButton, LinearProgress, Paper, styled, Typography } from "@mui/material";
+import { Box, Button, Grid, IconButton, LinearProgress, Paper, Typography } from "@mui/material";
+import { styled } from "@mui/material/styles";
 import CauhoiDathi from "./CauhoiDathi";
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;

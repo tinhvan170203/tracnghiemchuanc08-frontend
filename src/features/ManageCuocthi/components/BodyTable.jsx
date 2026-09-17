@@ -13,6 +13,8 @@ import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
 
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import { useSelector } from "react-redux";
+import DownloadQRCodeButton from "./DownloadQRCodeButton";
+import CreatorAccountAutocomplete from "../../../components/CreatorAccountAutocomplete";
 
 
 const BodyTable = ({
@@ -22,6 +24,9 @@ const BodyTable = ({
   onHandleChangeStatusCuocthi,
   onExportExcel,
   exportingId,
+  isContestSuperAdmin,
+  creatorOptions,
+  onAssignOwner,
 }) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
@@ -81,6 +86,25 @@ const BodyTable = ({
       >
         {row.status === true ? (<span className="text-green-600 font-bold">Đang diễn ra</span>) : 'Không diễn ra'}
       </TableCell>
+      {isContestSuperAdmin && (
+        <TableCell className="border-r border-slate-300" align="left" style={{ minWidth: 180 }}>
+          <div className="text-xs font-semibold mb-1">
+            {row.createdBy?.tentaikhoan || (
+              <span className="text-amber-700">Chưa gán</span>
+            )}
+          </div>
+          <CreatorAccountAutocomplete
+            options={creatorOptions || []}
+            value=""
+            size="small"
+            variant="compact"
+            placeholder="Gán chủ…"
+            onChange={(userId) => {
+              if (userId && onAssignOwner) onAssignOwner(row, userId);
+            }}
+          />
+        </TableCell>
+      )}
       <TableCell
         align="right"
         className="bg-gray-300 flex justify-center items-center space-x-1"
@@ -110,17 +134,23 @@ const BodyTable = ({
         )}
 
         {roles && roles.includes("xem cuộc thi") && (
-          <Button
-            variant="contained"
-            color="warning"
-            size="small"
-            style={{ marginLeft: "4px" }}
-            disabled={exportingId === row._id}
-            onClick={() => onExportExcel && onExportExcel(row)}
-          >
-            <FileDownloadIcon style={{ fontSize: "20px" }} />
-            {exportingId === row._id ? "Đang tải..." : ""}
-          </Button>
+          <>
+            <Button
+              variant="contained"
+              color="warning"
+              size="small"
+              style={{ marginLeft: "4px" }}
+              disabled={exportingId === row._id}
+              onClick={() => onExportExcel && onExportExcel(row)}
+            >
+              <FileDownloadIcon style={{ fontSize: "20px" }} />
+              {exportingId === row._id ? "Đang tải..." : ""}
+            </Button>
+            <DownloadQRCodeButton
+              assessmentId={row._id}
+              assessmentName={row.tencuocthi}
+            />
+          </>
         )}
 
         <IconButton

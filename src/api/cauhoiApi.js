@@ -17,6 +17,10 @@ const cauhoiApi = {
     deleteCauhoi(id,params){
         const url = `/api/cau-hoi/delete/${id}`;
         return axiosConfig.delete(url, {params})
+    },
+    setActive(id, data){
+        const url = `/api/cau-hoi/${id}/active`;
+        return axiosConfig.put(url, data)
     }
 };
 

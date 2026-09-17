@@ -35,7 +35,7 @@ const schema = yup
       .required("Lỗi: Vui lòng nhập số thứ tự"),
     domain: yup
       .string()
-      .required("Lỗi: Vui lòng nhập domain"),
+      .required("Lỗi: Vui lòng nhập domain API (vd: https://tenmien.vn/api)"),
   })
   .required();
 
@@ -47,7 +47,7 @@ export default function DialogAdd({
   const form = useForm({
     defaultValues:  {
       text: "Công an",
-      domain: "/public/sumary/toan-quoc",
+      domain: "https://",
       thutu: 1
     },
     resolver: yupResolver(schema),
@@ -117,10 +117,17 @@ export default function DialogAdd({
                   <InputField
                     name="domain"
                     form={form}
-                    label="Domain chính *"
+                    label="Domain API (tới .../api) *"
                     type="text"
                     disabled={false}
                   />
+                  <Typography
+                    variant="caption"
+                    sx={{ color: "text.secondary", display: "block", mt: 0.5, ml: 0.5 }}
+                  >
+                    Chỉ nhập tới /api, ví dụ https://antoangiaothongxxx.com/api — hệ thống tự
+                    gọi /public/sumary/toan-quoc và /public/sumary/fanpage.
+                  </Typography>
                 </Grid>
                 <Grid item xs={12} md={12} lg={12}>
                   <InputField

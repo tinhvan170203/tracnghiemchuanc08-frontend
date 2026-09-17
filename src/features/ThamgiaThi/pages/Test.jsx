@@ -270,8 +270,11 @@ const ontap = searchParams.get("ontap");
           <div className="flex justify-center mt-2">
             <img src="/logoc08.png" alt="logo" className="w-8 md:w-12" />
           </div>
-          <p className="text-center text-gray-500 font-semibold uppercase text-[14px]">Cục Cảnh sát giao thông và Công an tỉnh Hưng Yên</p>
-          <p className="text-center text-gray-500 font-semibold uppercase text-[14px]">phối hợp thực hiện</p>
+          <p className="text-center text-gray-500 font-semibold uppercase text-[12px]">
+             Bản quyền thuộc Công an tỉnh Hưng Yên
+          </p>
+          {/* <p className="text-center text-gray-500 font-semibold uppercase text-[12px]">Ứng dụng do Cục Cảnh sát giao thông và Công an tỉnh Hưng Yên phối hợp xây dựng</p> */}
+          {/* <p className="text-center text-gray-500 font-semibold uppercase text-[14px]"></p> */}
           <p className="text-center text-[12px] font-normal text-[#ab0000] md:text-[16px]">Ứng dụng công nghệ thông tin trong công tác tuyên truyền, phổ biến, giáo dục pháp luật về trật tự an toàn giao thông</p>
         </div>
 

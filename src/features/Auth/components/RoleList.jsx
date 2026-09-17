@@ -72,28 +72,34 @@ export default function RoleList({label, values, onChangeRoleList,  userTemp}) {
   
   return (
         <TableRow
-          // key={}
-          sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+          sx={{
+            "&:nth-of-type(even)": { bgcolor: "#f8fafc" },
+            "&:last-child td, &:last-child th": { border: 0 },
+          }}
         >
-          <TableCell component="th" scope="row"><span className="font-bold">{label}</span></TableCell>
-          {roles && roles.map((role, index)=>(
-               <TableCell align="right" key={role.name}>
+          <TableCell component="th" scope="row" sx={{ py: 1, px: 1.25, minWidth: 140 }}>
+            <span className="font-semibold text-[13px] text-slate-700">{label}</span>
+          </TableCell>
+          {roles && roles.map((role) => (
+               <TableCell align="center" key={role.name} sx={{ py: 1, px: 0.5 }}>
                 <input
                   type="checkbox"
                   checked={role?.isChecked || false}
                   name={role.name}
                   onChange={handleChange}
+                  className="h-4 w-4 accent-blue-600 cursor-pointer"
                 />
               </TableCell>
           ))}
 
-            <TableCell align="right">
+            <TableCell align="center" sx={{ py: 1, px: 0.5 }}>
                 <input
                   type="checkbox"
                   checked={roles.filter(role=> role?.isChecked !== true).length < 1}
                   name="allSelect"
                   value="allSelect"
                   onChange={handleChange}
+                  className="h-4 w-4 accent-blue-600 cursor-pointer"
                 />
             </TableCell>
         </TableRow>

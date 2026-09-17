@@ -4,13 +4,16 @@ import {
   Box,
   Paper,
   Typography,
-  Divider,
+  Stack,
+  Chip,
+  IconButton,
   Snackbar,
   Alert,
+  Tooltip,
 } from "@mui/material";
-import RemoveRedEyeIcon from "@mui/icons-material/RemoveRedEye";
-import ReplyIcon from "@mui/icons-material/Reply";
-import VideoCameraBackIcon from "@mui/icons-material/VideoCameraBack";
+import RemoveRedEyeOutlinedIcon from "@mui/icons-material/RemoveRedEyeOutlined";
+import ShareOutlinedIcon from "@mui/icons-material/ShareOutlined";
+import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
 import { API_SERVER } from "../../api/apiServer";
 import videoApi from "../../api/videoApi";
 
@@ -36,7 +39,7 @@ function VideoPlayerPanel({ video }) {
     let cancelled = false;
     const nextUrl = buildVideoUrl(video);
     setUrl((prev) => (prev === nextUrl ? prev : nextUrl));
-    setTotalView(null);
+    setTotalView(video.totalView ?? null);
 
     const tangView = async () => {
       try {
@@ -63,108 +66,128 @@ function VideoPlayerPanel({ video }) {
       .catch((err) => console.error("Lỗi khi sao chép link:", err));
   }, [url]);
 
+  if (!video) {
+    return (
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 3, sm: 5 },
+          borderRadius: 3,
+          border: "1px dashed #fdba74",
+          bgcolor: "rgba(255,255,255,0.85)",
+          minHeight: { xs: 220, sm: 320 },
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 1.5,
+          textAlign: "center",
+        }}
+      >
+        <PlayCircleOutlineIcon sx={{ fontSize: 56, color: "#fdba74" }} />
+        <Typography fontWeight={700} color="text.secondary">
+          Chưa có video để phát
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 320 }}>
+          Chọn một video trong danh sách bên cạnh để xem nội dung tuyên truyền.
+        </Typography>
+      </Paper>
+    );
+  }
+
   return (
     <Paper
-      elevation={3}
+      elevation={0}
       sx={{
-        p: { xs: 1, sm: 2 },
-        borderRadius: { xs: 2, sm: 3 },
-        bgcolor: "#ffffff",
+        p: { xs: 1.25, sm: 2 },
+        borderRadius: 3,
+        border: "1px solid #fed7aa",
+        bgcolor: "#fff",
+        boxShadow: "0 8px 28px rgba(234, 88, 12, 0.08)",
+        overflow: "hidden",
       }}
     >
-      {video ? (
-        <>
-          <Box
-            sx={{
-              position: "relative",
-              paddingTop: "56.25%",
-              borderRadius: 2,
-              overflow: "hidden",
-              bgcolor: "#000000",
-            }}
-          >
-            {url && (
-              <ReactPlayer
-                key={video._id}
-                src={url}
-                controls
-                playing
-                width="100%"
-                height="100%"
-                style={{ position: "absolute", top: 0, left: 0 }}
-                fallback={
-                  <div className="flex items-center justify-center h-full text-white">
-                    Đang tải video...
-                  </div>
-                }
-              />
-            )}
-          </Box>
+      <Box
+        sx={{
+          position: "relative",
+          paddingTop: "56.25%",
+          borderRadius: 2,
+          overflow: "hidden",
+          bgcolor: "#0f172a",
+        }}
+      >
+        {url && (
+          <ReactPlayer
+            key={video._id}
+            src={url}
+            controls
+            playing
+            width="100%"
+            height="100%"
+            style={{ position: "absolute", top: 0, left: 0 }}
+            fallback={
+              <div className="flex items-center justify-center h-full text-white">
+                Đang tải video...
+              </div>
+            }
+          />
+        )}
+      </Box>
 
-          <Box sx={{ mt: { xs: 1.5, sm: 2.5 } }}>
-            <Typography
-              variant="h5"
-              component="h1"
-              sx={{
-                fontWeight: "bold",
-                color: "#1e293b",
-                fontSize: { xs: "1.1rem", sm: "1.5rem" },
-              }}
-              className="!text-[12px]"
-            >
-              <VideoCameraBackIcon className="!text-orange-600" /> {video.name}
-            </Typography>
-            <p className="text-[12px] items-center justify-between flex space-x-1">
-              <div className="flex space-x-1 items-center">
-                <RemoveRedEyeIcon fontSize="16" />
-                <span className="font-semibold">{totalView ?? "…"}</span>
-                <span className="text-[11px] text-gray-500">lượt xem</span>
-              </div>
-              <div>
-                <button
-                  type="button"
-                  onClick={handleCopyLink}
-                  title="Sao chép đường dẫn video"
-                  className="p-1 hover:bg-slate-100 rounded-full text-slate-600 hover:text-blue-600 transition"
-                >
-                  <ReplyIcon fontSize="small" />
-                </button>
-              </div>
-            </p>
-            <Divider sx={{ my: 0.5 }} />
-            <Typography
-              variant="body1"
-              sx={{
-                color: "#475569",
-                lineHeight: 1.6,
-                whiteSpace: "pre-line",
-                display: "-webkit-box",
-                WebkitLineClamp: 3,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
-              }}
-              className="!text-[11px]"
-            >
-              {video.mota || "Không có mô tả cho video này."}
-            </Typography>
-          </Box>
-        </>
-      ) : (
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: 250,
-            bgcolor: "#f1f5f9",
-            borderRadius: 2,
-          }}
+      <Box sx={{ mt: { xs: 1.75, sm: 2.25 }, px: { xs: 0.5, sm: 0.5 } }}>
+     <p className="text-[15px] font-semibold">
+          {video.name}
+        </p>
+
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+          spacing={1}
+          sx={{ mt: 1.25 }}
         >
-          <Typography color="text.secondary">
-            Chưa chọn xem video tuyên truyền
+          <Chip
+            icon={<RemoveRedEyeOutlinedIcon sx={{ fontSize: "16px !important" }} />}
+            label={`${totalView ?? "…"} lượt xem`}
+            size="small"
+            sx={{
+              fontWeight: 600,
+              bgcolor: "#fff7ed",
+              color: "#9a3412",
+              "& .MuiChip-icon": { color: "#ea580c" },
+            }}
+          />
+          <Tooltip title="Sao chép liên kết để chia sẻ">
+            <IconButton
+              onClick={handleCopyLink}
+              size="small"
+              sx={{
+                border: "1px solid #fed7aa",
+                color: "#ea580c",
+                bgcolor: "#fff7ed",
+                "&:hover": { bgcolor: "#ffedd5" },
+              }}
+            >
+              <ShareOutlinedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+
+        {(video.mota || "").trim() ? (
+          <Typography
+            sx={{
+              mt: 1.5,
+              color: "#475569",
+              lineHeight: 1.65,
+              fontSize: { xs: "0.875rem", sm: "0.95rem" },
+              whiteSpace: "pre-line",
+            }}
+            className="!text-[13px]"
+          >
+            {video.mota}
           </Typography>
-        </Box>
-      )}
+        ) : null}
+      </Box>
 
       <Snackbar
         open={openSnackbar}
@@ -177,7 +200,7 @@ function VideoPlayerPanel({ video }) {
           severity="success"
           sx={{ width: "100%" }}
         >
-          Đã sao chép đường dẫn video vào bộ nhớ tạm để chia sẻ!
+          Đã sao chép đường dẫn video để chia sẻ!
         </Alert>
       </Snackbar>
     </Paper>

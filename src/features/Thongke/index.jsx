@@ -1,12 +1,15 @@
 
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import dayjs from 'dayjs';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { writeSearchParams } from '../../utils/searchParams';
 import { useSnackbar } from "notistack";
-import { Button, LinearProgress } from '@mui/material';
 import monthiApi from '../../api/monthiApi';
 import ChartResult from './components/ChartResult';
 import ModalLoading from '../../components/ModalLoading';
+import DemographicFilters, {
+  validateDemographicAge,
+} from '../../components/DemographicFilters';
+import CreatorAccountAutocomplete from '../../components/CreatorAccountAutocomplete';
 
 /**
  * Redesigned Thongke (Statistics) component for Cục Cảnh sát giao thông.
@@ -15,13 +18,35 @@ import ModalLoading from '../../components/ModalLoading';
  */
 
 const Thongke = () => {
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
-  const [monthi, setMonthi] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const qFromDate = searchParams.get("fromDate") || "";
+  const qToDate = searchParams.get("toDate") || "";
+  const qMonthi = searchParams.get("monthi") || "";
+  const qChuyende = searchParams.get("chuyende") || "";
+  const qCreatorIds = searchParams.get("creatorIds") || "";
+  const qAgeFrom = searchParams.get("ageFrom") || "";
+  const qAgeTo = searchParams.get("ageTo") || "";
+  const qGioitinh = searchParams.get("gioitinh") || "";
+  const qLoaixe = searchParams.get("loaixe") || "";
+  const daThongke = searchParams.get("run") === "1";
+  const [fromDate, setFromDate] = useState(qFromDate);
+  const [toDate, setToDate] = useState(qToDate);
+  const [monthi, setMonthi] = useState(qMonthi);
+  const [chuyende, setChuyende] = useState(qChuyende);
+  const [creatorIds, setCreatorIds] = useState(qCreatorIds);
+  const [ageFrom, setAgeFrom] = useState(qAgeFrom);
+  const [ageTo, setAgeTo] = useState(qAgeTo);
+  const [gioitinh, setGioitinh] = useState(qGioitinh);
+  const [loaixe, setLoaixe] = useState(qLoaixe);
   const [monthiList, setMonthiList] = useState([]);
+  const [chuyendeList, setChuyendeList] = useState([]);
+  const [creatorOptions, setCreatorOptions] = useState([]);
+  const [isContestSuperAdmin, setIsContestSuperAdmin] = useState(false);
+  const [scopeReady, setScopeReady] = useState(false);
   const [openModalLoading, setOpenModalLoading] = useState(false);
   const [totalNopbai, setTotalNopbai] = useState(0);
   const [totalLuotthi, setTotalLuotthi] = useState(0);
+  const [totalCuocthi, setTotalCuocthi] = useState(0);
   const [dataKhongdat, setDataKhongdat] = useState(0);
   const [dataTrungbinh, setDataTrungbinh] = useState(0);
   const [dataKha, setDataKha] = useState(0);
@@ -35,7 +60,16 @@ const Thongke = () => {
     const getMonthiOfUser = async () => {
       try {
         let res = await monthiApi.getMonthiOfUser();
-        setMonthiList(res.data.quantrinhommonthi);
+        setMonthiList(res.data.quantrinhommonthi || []);
+        setIsContestSuperAdmin(!!res.data.isContestSuperAdmin);
+        if (res.data.isContestSuperAdmin) {
+          const scope = await monthiApi.getContestScopeOptions();
+          setCreatorOptions(scope.data.creators || []);
+          setIsContestSuperAdmin(!!scope.data.isContestSuperAdmin);
+          if (scope.data.monthiList?.length) {
+            setMonthiList(scope.data.monthiList);
+          }
+        }
       } catch (error) {
         const message = error.message || "Đã xảy ra lỗi khi tải danh sách môn thi";
         if (message === "Token không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại") {
@@ -45,15 +79,45 @@ const Thongke = () => {
           anchorOrigin: { vertical: "bottom", horizontal: "right" },
           variant: "error",
         });
+      } finally {
+        setScopeReady(true);
       }
     };
     getMonthiOfUser();
   }, [navigate, enqueueSnackbar]);
 
-  const handleThongke = async () => {
+  useEffect(() => {
+    setFromDate(qFromDate);
+    setToDate(qToDate);
+    setMonthi(qMonthi);
+    setChuyende(qChuyende);
+    setCreatorIds(qCreatorIds);
+    setAgeFrom(qAgeFrom);
+    setAgeTo(qAgeTo);
+    setGioitinh(qGioitinh);
+    setLoaixe(qLoaixe);
+  }, [qFromDate, qToDate, qMonthi, qChuyende, qCreatorIds, qAgeFrom, qAgeTo, qGioitinh, qLoaixe]);
+
+  useEffect(() => {
+    if (!monthi) {
+      setChuyendeList([]);
+      return;
+    }
+    const loadChuyende = async () => {
+      try {
+        const res = await monthiApi.getChuyendes({ id_monthi: monthi });
+        setChuyendeList(res.data || []);
+      } catch (_) {
+        setChuyendeList([]);
+      }
+    };
+    loadChuyende();
+  }, [monthi]);
+
+  const handleThongke = useCallback(async (filters) => {
     try {
       setOpenModalLoading(true);
-      let res = await monthiApi.thongke({ fromDate, toDate, monthi });
+      let res = await monthiApi.thongke(filters);
       setOpenModalLoading(false);
       setTotalNopbai(res.data.total_nopbai);
       setDataKhongdat(res.data.total_khongdat);
@@ -62,9 +126,85 @@ const Thongke = () => {
       setDataGioi(res.data.total_gioi);
       setDataXuatsac(res.data.total_xuatsac);
       setTotalLuotthi(res.data.total);
+      setTotalCuocthi(res.data.total_cuocthi || 0);
     } catch (error) {
       setOpenModalLoading(false);
       alert(error.message);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!daThongke || !scopeReady) return;
+    handleThongke({
+      fromDate: qFromDate,
+      toDate: qToDate,
+      monthi: qMonthi,
+      chuyende: qChuyende,
+      creatorIds: isContestSuperAdmin ? qCreatorIds : "",
+      ageFrom: qAgeFrom,
+      ageTo: qAgeTo,
+      gioitinh: qGioitinh,
+      loaixe: qLoaixe,
+    });
+  }, [
+    daThongke,
+    scopeReady,
+    isContestSuperAdmin,
+    qFromDate,
+    qToDate,
+    qMonthi,
+    qChuyende,
+    qCreatorIds,
+    qAgeFrom,
+    qAgeTo,
+    qGioitinh,
+    qLoaixe,
+    handleThongke,
+  ]);
+
+  const handleDemographicChange = (field, value) => {
+    const setters = {
+      ageFrom: setAgeFrom,
+      ageTo: setAgeTo,
+      gioitinh: setGioitinh,
+      loaixe: setLoaixe,
+    };
+    setters[field]?.(value);
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const ageError = validateDemographicAge(ageFrom, ageTo);
+    if (ageError) {
+      enqueueSnackbar(ageError, { variant: "warning" });
+      return;
+    }
+    writeSearchParams(searchParams, setSearchParams, {
+      fromDate,
+      toDate,
+      monthi,
+      chuyende,
+      creatorIds: isContestSuperAdmin ? creatorIds : "",
+      ageFrom,
+      ageTo,
+      gioitinh,
+      loaixe,
+      run: "1",
+    });
+  };
+
+  const handleClearDemographics = () => {
+    setAgeFrom("");
+    setAgeTo("");
+    setGioitinh("");
+    setLoaixe("");
+    if (daThongke) {
+      writeSearchParams(searchParams, setSearchParams, {
+        ageFrom: "",
+        ageTo: "",
+        gioitinh: "",
+        loaixe: "",
+      });
     }
   };
 
@@ -74,16 +214,26 @@ const Thongke = () => {
       <main className="p-8 max-w-7xl mx-auto space-y-8">
         {/* Page Title */}
         <div>
-          <p className="text-slate-500 mt-1">Phân tích kết quả đánh giá nhận thức về trật tự an toàn giao thông.</p>
+          <p className="text-slate-500 mt-1">
+            {isContestSuperAdmin
+              ? "Thống kê toàn hệ thống — có thể lọc theo tài khoản tạo cuộc, kiến thức và chuyên đề."
+              : "Thống kê các cuộc đánh giá do tài khoản của bạn tạo (trong kiến thức được phân quyền)."}
+          </p>
         </div>
 
         {/* Filters Card */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <form className="flex flex-wrap items-end gap-6" onSubmit={(e) => { e.preventDefault(); handleThongke(); }}>
+          {monthiList.length === 0 && !isContestSuperAdmin && (
+            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 mb-4">
+              Tài khoản chưa được phân quyền kiến thức đánh giá nào. Liên hệ quản trị viên (mục Phân quyền QL kiến thức đánh giá) để được cấp quyền trước khi thống kê.
+            </p>
+          )}
+          <form className="flex flex-wrap items-end gap-6" onSubmit={handleSubmit}>
             <div className="flex-1 min-w-[200px]">
               <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Từ ngày</label>
               <input 
-                type="date" 
+                type="date"
+                value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)} 
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#ab0000] transition-all"
               />
@@ -91,28 +241,66 @@ const Thongke = () => {
             <div className="flex-1 min-w-[200px]">
               <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Đến ngày</label>
               <input 
-                type="date" 
+                type="date"
+                value={toDate}
                 onChange={(e) => setToDate(e.target.value)} 
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#ab0000] transition-all"
               />
             </div>
             <div className="flex-1 min-w-[200px]">
-              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Khối</label>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Kiến thức đánh giá</label>
               <select 
                 value={monthi} 
-                onChange={(e) => setMonthi(e.target.value)} 
+                onChange={(e) => {
+                  setMonthi(e.target.value);
+                  setChuyende("");
+                }} 
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#ab0000] transition-all appearance-none"
               >
-                <option value="">Tất cả các khối</option>
+                <option value="">{isContestSuperAdmin ? "Tất cả kiến thức" : "Tất cả kiến thức được phân quyền"}</option>
                 {monthiList.map(i => <option key={i._id} value={i._id}>{i.tenmonthi}</option>)}
               </select>
             </div>
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Chuyên đề</label>
+              <select
+                value={chuyende}
+                onChange={(e) => setChuyende(e.target.value)}
+                disabled={!monthi}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-[#ab0000] transition-all appearance-none disabled:opacity-60"
+              >
+                <option value="">Tất cả chuyên đề</option>
+                {chuyendeList.map((i) => (
+                  <option key={i._id} value={i._id}>{i.title}</option>
+                ))}
+              </select>
+            </div>
+            {isContestSuperAdmin && (
+              <div className="flex-1 min-w-[220px]">
+                <CreatorAccountAutocomplete
+                  label="Tài khoản tạo cuộc"
+                  options={creatorOptions}
+                  value={creatorIds}
+                  onChange={setCreatorIds}
+                />
+              </div>
+            )}
             <button 
               type="submit"
               className="px-8 py-3 bg-[#ab0000] text-white font-bold rounded-xl hover:bg-[#8e0000] shadow-lg shadow-red-100 flex items-center gap-2 transition-all active:scale-[0.98]"
             >
               Thống kê
             </button>
+            <DemographicFilters
+              idPrefix="thongke-hethong"
+              ageFrom={ageFrom}
+              ageTo={ageTo}
+              gioitinh={gioitinh}
+              loaixe={loaixe}
+              onChange={handleDemographicChange}
+              onClear={handleClearDemographics}
+              className="basis-full"
+            />
           </form>
         </div>
 
@@ -127,6 +315,14 @@ const Thongke = () => {
                 <div className="mt-4 flex items-center gap-2 text-[11px] font-bold bg-white/20 w-fit px-3 py-1 rounded-full">
                   Dữ liệu thời gian thực
                 </div>
+              </div>
+            </div>
+
+            <div className="bg-slate-800 p-8 rounded-3xl text-white relative overflow-hidden shadow-xl shadow-slate-200">
+              <div className="relative z-10">
+                <p className="text-sm font-bold opacity-80 uppercase tracking-widest mb-1">Tổng số cuộc đánh giá</p>
+                <h3 className="text-5xl font-black">{totalCuocthi.toLocaleString()}</h3>
+                <p className="text-[11px] font-bold mt-2 opacity-80">Theo bộ lọc hiện tại</p>
               </div>
             </div>
 
