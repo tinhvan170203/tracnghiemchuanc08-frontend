@@ -250,6 +250,54 @@ export default function FormAddRoleUser({
               userTemp={userTemp}
             />
             <RoleList
+              label="Quản lý domain địa phương"
+              values={[{ name: "xem domain địa phương" }]}
+              onChangeRoleList={handleChangeRoleList}
+              userTemp={userTemp}
+            />
+            <RoleList
+              label="Lượt theo dõi fanpage"
+              values={[{ name: "xem lượt theo dõi fanpage" }]}
+              onChangeRoleList={handleChangeRoleList}
+              userTemp={userTemp}
+            />
+            <RoleList
+              label="Fanpage toàn quốc"
+              values={[{ name: "xem fanpage toàn quốc" }]}
+              onChangeRoleList={handleChangeRoleList}
+              userTemp={userTemp}
+            />
+            <RoleList
+              label="Hỏi đáp AI"
+              values={[{ name: "xem hỏi đáp AI" }]}
+              onChangeRoleList={handleChangeRoleList}
+              userTemp={userTemp}
+            />
+            <RoleList
+              label="Hỏi đáp AI toàn quốc"
+              values={[{ name: "xem hỏi đáp AI toàn quốc" }]}
+              onChangeRoleList={handleChangeRoleList}
+              userTemp={userTemp}
+            />
+            <RoleList
+              label="Thống kê hệ thống"
+              values={[{ name: "xem thống kê hệ thống" }]}
+              onChangeRoleList={handleChangeRoleList}
+              userTemp={userTemp}
+            />
+            <RoleList
+              label="Thống kê kết quả toàn quốc"
+              values={[{ name: "xem thống kê toàn quốc" }]}
+              onChangeRoleList={handleChangeRoleList}
+              userTemp={userTemp}
+            />
+            <RoleList
+              label="Câu hỏi hay sai"
+              values={[{ name: "xem câu hỏi hay sai" }]}
+              onChangeRoleList={handleChangeRoleList}
+              userTemp={userTemp}
+            />
+            <RoleList
               label="QL câu hỏi"
               values={[
                 { name: "xem câu hỏi" },

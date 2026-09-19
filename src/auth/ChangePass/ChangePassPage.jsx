@@ -315,7 +315,8 @@ function ChangePassPage() {
 
           <footer className="mt-10 space-y-1 border-t border-amber-200/80 pt-5 text-center text-xs leading-relaxed text-slate-500 sm:text-[13px]">
             <p className="font-semibold uppercase">
-              Ứng dụng do Cục C08 và Công an tỉnh Hưng Yên triển khai thực hiện
+              {/* Ứng dụng do Cục C08 và Công an tỉnh Hưng Yên triển khai thực hiện */}
+              Ứng dụng do Công an tỉnh Hưng Yên triển khai thực hiện
             </p>
             <p>© 2026 — Tuyên truyền, đánh giá nhận thức, kiến thức pháp luật về trật tự, an toàn giao thông</p>
           </footer>

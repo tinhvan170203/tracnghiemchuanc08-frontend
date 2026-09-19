@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { Outlet, useNavigate, Navigate } from "react-router-dom";
 import Drawer from "@mui/material/Drawer";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -29,6 +29,7 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { useSnackbar } from "notistack";
 import LogoutIcon from "@mui/icons-material/Logout";
 import SiteFooter from "../SiteFooter";
+import LoadingComponent from "../LoadingComponent";
 import { fetchCurrentUser, logoutAccount } from "../../auth/authSlice";
 import { unwrapResult } from "@reduxjs/toolkit";
 import { HEADER_2 } from "../../../constant/constant";
@@ -84,20 +85,19 @@ export default function AdminDarboard() {
 
   const handleLogout = async () => {
     try {
-      const resultAction = await dispatch(logoutAccount());
-      unwrapResult(resultAction);
+      await dispatch(logoutAccount()).unwrap();
       enqueueSnackbar("Đăng xuất tài khoản thành công!", {
         anchorOrigin: { vertical: "bottom", horizontal: "right" },
         variant: "success",
       });
-      navigate("/login");
     } catch (error) {
       console.log(error);
-      enqueueSnackbar("Lỗi khi đăng xuất tài khoản", {
+      enqueueSnackbar("Đã đăng xuất khỏi phiên làm việc", {
         anchorOrigin: { vertical: "bottom", horizontal: "right" },
-        variant: "error",
+        variant: "success",
       });
-      navigate("/login");
+    } finally {
+      navigate("/login", { replace: true });
     }
   };
 
@@ -228,125 +228,139 @@ export default function AdminDarboard() {
             )}
 
             {roles && roles.includes("xem cuộc thi") && (
-              <>
-                <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
-                  <NavLink
-                    to="/admin/quan-ly-cac-cuoc-thi"
-                    style={({ isActive }) =>
-                      isActive ? activeStyle : undefined
-                    }
-                  >
-                    <div className="flex items-center space-x-2">
-                      <EmojiEventsIcon color="primary" />
-                      <span>Quản lý cuộc đánh giá</span>
-                    </div>
-                  </NavLink>
-                </li>
-                <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
-                  <NavLink
-                    to="/admin/fanpage-clicks"
-                    style={({ isActive }) =>
-                      isActive ? activeStyle : undefined
-                    }
-                  >
-                    <div className="flex items-center space-x-2">
-                      <FacebookIcon color="primary" />
-                      <span>Lượt theo dõi fanpage</span>
-                    </div>
-                  </NavLink>
-                </li>
-                <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
-                  <NavLink
-                    to="/admin/fanpage-toan-quoc"
-                    style={({ isActive }) =>
-                      isActive ? activeStyle : undefined
-                    }
-                  >
-                    <div className="flex items-center space-x-2">
-                      <PublicIcon color="primary" />
-                      <span>Fanpage toàn quốc</span>
-                    </div>
-                  </NavLink>
-                </li>
-                <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
-                  <NavLink
-                    to="/admin/ai-chat-logs"
-                    style={({ isActive }) =>
-                      isActive ? activeStyle : undefined
-                    }
-                  >
-                    <div className="flex items-center space-x-2">
-                      <ForumIcon color="primary" />
-                      <span>Hỏi đáp AI</span>
-                    </div>
-                  </NavLink>
-                </li>
-                {/* <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
-                  <NavLink
-                    to="/admin/ai-chat-toan-quoc"
-                    style={({ isActive }) =>
-                      isActive ? activeStyle : undefined
-                    }
-                  >
-                    <div className="flex items-center space-x-2">
-                      <TravelExploreIcon color="primary" />
-                      <span>Hỏi đáp AI toàn quốc</span>
-                    </div>
-                  </NavLink>
-                </li> */}
-                <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
-                  <NavLink
-                    to="/admin/thongke"
-                    style={({ isActive }) =>
-                      isActive ? activeStyle : undefined
-                    }
-                  >
-                    <div className="flex items-center space-x-2">
-                      <BarChartIcon color="primary" />
-                      <span>Thống kê hệ thống</span>
-                    </div>
-                  </NavLink>
-                </li>
-                <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
-                  <NavLink
-                    to="/admin/thong-ke-cau-hoi-sai"
-                    style={({ isActive }) =>
-                      isActive ? activeStyle : undefined
-                    }
-                  >
-                    <div className="flex items-center space-x-2">
-                      <ReportProblemIcon color="primary" />
-                      <span>Câu hỏi hay sai</span>
-                    </div>
-                  </NavLink>
-                </li>
-                <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
-                  <NavLink
-                    to="/admin/domain-dia-phuong"
-                    style={({ isActive }) =>
-                      isActive ? activeStyle : undefined
-                    }
-                  >
-                    <div className="flex items-center space-x-2">
-                      <LanguageIcon color="primary" />
-                      <span>Quản lý domain địa phương</span>
-                    </div>
-                  </NavLink>
-                </li>
-                <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
-                  <NavLink
-                    to="/admin/thong-ke-dia-phuong"
-                    style={({ isActive }) =>
-                      isActive ? activeStyle : undefined
-                    }
-                  >
-                    <div className="flex items-center space-x-2">
-                      <PublicIcon color="primary" />
-                      <span>Thống kê kết quả toàn quốc</span>
-                    </div>
-                  </NavLink>
-                </li>
-              </>
+              <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
+                <NavLink
+                  to="/admin/quan-ly-cac-cuoc-thi"
+                  style={({ isActive }) =>
+                    isActive ? activeStyle : undefined
+                  }
+                >
+                  <div className="flex items-center space-x-2">
+                    <EmojiEventsIcon color="primary" />
+                    <span>Quản lý cuộc đánh giá</span>
+                  </div>
+                </NavLink>
+              </li>
+            )}
+            {roles && roles.includes("xem domain địa phương") && (
+              <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
+                <NavLink
+                  to="/admin/domain-dia-phuong"
+                  style={({ isActive }) =>
+                    isActive ? activeStyle : undefined
+                  }
+                >
+                  <div className="flex items-center space-x-2">
+                    <LanguageIcon color="primary" />
+                    <span>Quản lý domain địa phương</span>
+                  </div>
+                </NavLink>
+              </li>
+            )}
+            {roles && roles.includes("xem lượt theo dõi fanpage") && (
+              <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
+                <NavLink
+                  to="/admin/fanpage-clicks"
+                  style={({ isActive }) =>
+                    isActive ? activeStyle : undefined
+                  }
+                >
+                  <div className="flex items-center space-x-2">
+                    <FacebookIcon color="primary" />
+                    <span>Lượt theo dõi fanpage</span>
+                  </div>
+                </NavLink>
+              </li>
+            )}
+            {roles && roles.includes("xem fanpage toàn quốc") && (
+              <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
+                <NavLink
+                  to="/admin/fanpage-toan-quoc"
+                  style={({ isActive }) =>
+                    isActive ? activeStyle : undefined
+                  }
+                >
+                  <div className="flex items-center space-x-2">
+                    <PublicIcon color="primary" />
+                    <span>Fanpage toàn quốc</span>
+                  </div>
+                </NavLink>
+              </li>
+            )}
+            {roles && roles.includes("xem hỏi đáp AI") && (
+              <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
+                <NavLink
+                  to="/admin/ai-chat-logs"
+                  style={({ isActive }) =>
+                    isActive ? activeStyle : undefined
+                  }
+                >
+                  <div className="flex items-center space-x-2">
+                    <ForumIcon color="primary" />
+                    <span>Hỏi đáp AI</span>
+                  </div>
+                </NavLink>
+              </li>
+            )}
+            {roles && roles.includes("xem hỏi đáp AI toàn quốc") && (
+              <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
+                <NavLink
+                  to="/admin/ai-chat-toan-quoc"
+                  style={({ isActive }) =>
+                    isActive ? activeStyle : undefined
+                  }
+                >
+                  <div className="flex items-center space-x-2">
+                    <TravelExploreIcon color="primary" />
+                    <span>Hỏi đáp AI toàn quốc</span>
+                  </div>
+                </NavLink>
+              </li>
+            )}
+            {roles && roles.includes("xem thống kê hệ thống") && (
+              <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
+                <NavLink
+                  to="/admin/thongke"
+                  style={({ isActive }) =>
+                    isActive ? activeStyle : undefined
+                  }
+                >
+                  <div className="flex items-center space-x-2">
+                    <BarChartIcon color="primary" />
+                    <span>Thống kê hệ thống</span>
+                  </div>
+                </NavLink>
+              </li>
+            )}
+            {roles && roles.includes("xem thống kê toàn quốc") && (
+              <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
+                <NavLink
+                  to="/admin/thong-ke-dia-phuong"
+                  style={({ isActive }) =>
+                    isActive ? activeStyle : undefined
+                  }
+                >
+                  <div className="flex items-center space-x-2">
+                    <PublicIcon color="primary" />
+                    <span>Thống kê kết quả toàn quốc</span>
+                  </div>
+                </NavLink>
+              </li>
+            )}
+            {roles && roles.includes("xem câu hỏi hay sai") && (
+              <li className="text-md my-2 hover:font-bold transition-all py-2 border-b">
+                <NavLink
+                  to="/admin/thong-ke-cau-hoi-sai"
+                  style={({ isActive }) =>
+                    isActive ? activeStyle : undefined
+                  }
+                >
+                  <div className="flex items-center space-x-2">
+                    <ReportProblemIcon color="primary" />
+                    <span>Câu hỏi hay sai</span>
+                  </div>
+                </NavLink>
+              </li>
             )}
 
             {roles && roles.includes("xem video tuyên truyền") && (
@@ -411,7 +425,9 @@ export default function AdminDarboard() {
       </Drawer>
 
       <Box className="mt-2">
-        <Outlet />
+        <Suspense fallback={<LoadingComponent />}>
+          <Outlet />
+        </Suspense>
       </Box>
 
       <SiteFooter variant="admin" />

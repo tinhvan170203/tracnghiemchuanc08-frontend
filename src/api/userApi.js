@@ -12,7 +12,8 @@ const userApi = {
     }, 
     logout(){
         const url = `api/auth/logout`;
-        return axiosConfig.get(url)
+        // axiosCommon: không bắn alert 403 khi token đã hết hạn
+        return axiosCommon.get(url)
     },
     getMe(){
         const url = `api/auth/me`;

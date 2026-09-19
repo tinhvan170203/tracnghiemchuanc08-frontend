@@ -112,7 +112,10 @@ axiosConfig.interceptors.response.use(
 
     // 403 quyền thật sự (không phải hết hạn token)
     if (status === 403 && !isTokenExpired) {
-      alert("Bạn không có quyền truy cập vào tài nguyên này!");
+      const detail =
+        (typeof message === "string" && message.trim()) ||
+        "Bạn không có quyền truy cập vào tài nguyên này!";
+      alert(detail);
     }
 
     return Promise.reject(error.response?.data || error);

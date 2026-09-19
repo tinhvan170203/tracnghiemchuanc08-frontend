@@ -5,8 +5,8 @@ const PORT_SERVER = 4000;
 const IP_SERVER = "http://localhost"
 
 // const API_SERVER = "http://222.255.214.189:3002/"
-const API_SERVER = "https://antoangiaothongc08.com/"
-// const API_SERVER = "https://antoangiaothonghungyen.com/"
+// const API_SERVER = "https://antoangiaothongc08.com/"
+const API_SERVER = "https://antoangiaothonghungyen.com/"
 // const API_SERVER = "https://tuyentruyenphapluatpc08hungyen.com/"
 // const API_SERVER = `${IP_SERVER}:${PORT_SERVER}/`
 // const API_SERVER = `${IP_SERVER}:${PORT_SERVER}/`

@@ -47,14 +47,12 @@ export const logoutAccount = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       await userApi.logout();
-      localStorage.removeItem('user_thitracnghiem');
-      localStorage.removeItem('id_user_thitracnghiem');
-      return true;
-    } catch (error) {
-      localStorage.removeItem('user_thitracnghiem');
-      localStorage.removeItem('id_user_thitracnghiem');
-      return thunkAPI.rejectWithValue(error.response?.data || error.message);
+    } catch (_) {
+      // Cookie/API lỗi vẫn coi như đã đăng xuất phía client
     }
+    localStorage.removeItem('user_thitracnghiem');
+    localStorage.removeItem('id_user_thitracnghiem');
+    return true;
   }
 );
 

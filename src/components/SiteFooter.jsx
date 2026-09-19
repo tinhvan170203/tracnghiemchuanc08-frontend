@@ -38,8 +38,8 @@ export default function SiteFooter({ variant = "public" }) {
         {isAdmin ? (
           <>
             <p className="text-center text-[12px] font-bold uppercase tracking-wide text-white">
-              {/* Bản quyền thuộc Công an tỉnh Hưng Yên */}
-                  Cục Cảnh sát giao thông và Công an tỉnh Hưng Yên phối hợp thực hiện
+              Bản quyền thuộc Công an tỉnh Hưng Yên
+                  {/* Cục Cảnh sát giao thông và Công an tỉnh Hưng Yên phối hợp thực hiện */}
             </p>
             <p className="text-center text-[13px] font-normal leading-relaxed text-white/90">
               Phần mềm tuyên truyền, đánh giá
@@ -49,8 +49,8 @@ export default function SiteFooter({ variant = "public" }) {
         ) : (
           <>
             <p className="text-center text-[12px] font-bold uppercase tracking-wide text-[#b20202] [text-shadow:_0_1px_0_rgba(255,255,255,0.55)]">
-              {/* Bản quyền thuộc Công an tỉnh Hưng Yên */}
-              Cục Cảnh sát giao thông và Công an tỉnh Hưng Yên phối hợp thực hiện
+              Bản quyền thuộc Công an tỉnh Hưng Yên
+              {/* Cục Cảnh sát giao thông và Công an tỉnh Hưng Yên phối hợp thực hiện */}
             </p>
             <p className="text-center text-[11px] font-semibold  text-[#b20202] [text-shadow:_0_1px_0_rgba(255,255,255,0.45)] sm:text-[13px]">
               Phần mềm tuyên truyền, đánh giá nhận thức, kiến thức pháp luật về

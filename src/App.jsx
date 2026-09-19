@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import LoadingComponent from "./components/LoadingComponent";
 import RequireRole from "./components/RequireRole";
+import AdminDarboard from "./components/Admin";
 
 const TemplateChungnhan = lazy(() => import("./features/TemplateChungnhan"));
 const QuanlyDiaphuong = lazy(() => import("./features/Quanlydonvi/QuanlyDonvi"));
@@ -51,7 +52,6 @@ const PhanquyenQuanlyDonvi = lazy(() =>
 );
 const ChangePassPage = lazy(() => import("./auth/ChangePass/ChangePassPage"));
 const QuanlyTaikhoan = lazy(() => import("./features/Auth/QuanlyTaikhoan"));
-const AdminDarboard = lazy(() => import("./components/Admin"));
 const AiKnowledge = lazy(() => import("./features/AiKnowledge/AiKnowledge"));
 const Home = lazy(() => import("./features/Home/Home"));
 const FanpageClicks = lazy(() => import("./features/FanpageClicks"));
@@ -100,15 +100,15 @@ function App() {
             />
             <Route
               path="thongke"
-              element={withRole("xem cuộc thi", <Thongke />)}
+              element={withRole("xem thống kê hệ thống", <Thongke />)}
             />
             <Route
               path="thong-ke-cau-hoi-sai"
-              element={withRole("xem cuộc thi", <ThongkeCauhoiSai />)}
+              element={withRole("xem câu hỏi hay sai", <ThongkeCauhoiSai />)}
             />
             <Route
               path="thong-ke-dia-phuong"
-              element={withRole("xem cuộc thi", <ThongkeDiaphuong />)}
+              element={withRole("xem thống kê toàn quốc", <ThongkeDiaphuong />)}
             />
             <Route
               path="quan-ly-tai-khoan"
@@ -116,7 +116,7 @@ function App() {
             />
             <Route
               path="domain-dia-phuong"
-              element={withRole("xem cuộc thi", <QuanlyDiaphuong />)}
+              element={withRole("xem domain địa phương", <QuanlyDiaphuong />)}
             />
             <Route
               path="ai-knowledge"
@@ -143,19 +143,19 @@ function App() {
             />
             <Route
               path="fanpage-clicks"
-              element={withRole("xem cuộc thi", <FanpageClicks />)}
+              element={withRole("xem lượt theo dõi fanpage", <FanpageClicks />)}
             />
             <Route
               path="fanpage-toan-quoc"
-              element={withRole("xem cuộc thi", <FanpageToanquoc />)}
+              element={withRole("xem fanpage toàn quốc", <FanpageToanquoc />)}
             />
             <Route
               path="ai-chat-logs"
-              element={withRole("xem cuộc thi", <AiChatLogs />)}
+              element={withRole("xem hỏi đáp AI", <AiChatLogs />)}
             />
             <Route
               path="ai-chat-toan-quoc"
-              element={withRole("xem cuộc thi", <AiChatToanquoc />)}
+              element={withRole("xem hỏi đáp AI toàn quốc", <AiChatToanquoc />)}
             />
             <Route
               path="ket-qua-thi/cuoc-thi/:id"
